@@ -4,15 +4,15 @@ Discord bot for CS:GO Scrims and Pugs
 config.json file:
 ```json
 {
-    "discord_api": string,
-    "server_address": string,
-    "server_port": integer,
-    "server_password": string,
-    "RCON_password": string
+    "discord_api": "Discord API Bot Secret Key",
+    "server_address": "Server Address/IP",
+    "server_port": 27015,
+    "server_password": "Server Password",
+    "RCON_password": "RCON Password"
 }
 ```
 
-Perms: 
+Perms Integer: 17300544
 
 Using:
 - [get5 (CSGO Server Plugin)](https://github.com/splewis/get5)

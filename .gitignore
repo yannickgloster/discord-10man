@@ -4,7 +4,6 @@ config.json
 # Database
 main.sqlite
 
-
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm
 
@@ -243,5 +242,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
 config.json
 main.sqlite
+match_config.json

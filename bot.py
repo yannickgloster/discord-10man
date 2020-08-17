@@ -26,8 +26,8 @@ reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
 # Veto style 1 2 2 2 2 1, last two 1s are for if we are playing with coaches
-# player_veto = [1, 2, 2, 2, 2, 1, 1, 1]
-player_veto = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+player_veto = [1, 2, 2, 2, 2, 1, 1, 1]
+# player_veto = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 # Loading JSON config file
 with open('config.json') as config:
@@ -46,8 +46,7 @@ async def on_ready():
         CREATE TABLE IF NOT EXISTS users(
             discord_id TEXT UNIQUE,
             steam_id TEXT
-        )
-        ''')
+        )''')
     db.close()
     # TODO: Custom state for waiting for pug or if a pug is already playing
     await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.playing,
