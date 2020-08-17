@@ -6,7 +6,7 @@ import json
 startup_extensions = ["setup", "csgo"]
 
 # TODO: Change prefix to . when syncing
-bot = commands.Bot(command_prefix='!', case_insensitive=True, description='A bot to run CSGO PUGS.')
+bot = commands.Bot(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.')
 bot_secret: str
 
 server_address: (str, int)
