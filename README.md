@@ -1,7 +1,7 @@
 # discord-10man
 Discord bot for CS:GO Scrims and Pugs
 
-config.json file:
+#### config.json example:
 ```json
 {
     "discord_api": "Discord API Bot Secret Key",
