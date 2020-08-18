@@ -142,8 +142,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-config.json
-main.sqlite
 match_config.json
-icon.png
-icon.png
