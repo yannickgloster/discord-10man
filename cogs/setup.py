@@ -53,7 +53,7 @@ class Setup(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def setup_team1(self, ctx):
         bot.team1_channel = ctx.author.voice.channel
-        ctx.send(f'{bot.team1_channel} is now the channel for Team 1')
+        await ctx.send(f'{bot.team1_channel} is now the channel for Team 1')
 
     @setup_team1.error
     async def setup_team1_error(self, ctx, error):
@@ -66,7 +66,7 @@ class Setup(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def setup_team2(self, ctx):
         bot.team2_channel = ctx.author.voice.channel
-        ctx.send(f'{bot.team2_channel} is now the channel for Team 2')
+        await ctx.send(f'{bot.team2_channel} is now the channel for Team 2')
 
     @setup_team2.error
     async def setup_team2_error(self, ctx, error):
