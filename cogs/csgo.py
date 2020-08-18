@@ -12,6 +12,7 @@ import bot
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
 reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
+current_map_pool = active_map_pool.copy()
 
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
@@ -144,10 +145,16 @@ class CSGO(commands.Cog):
 
         today = date.today()
 
+        maps_string = 'Veto Maps Pool: '
+        for map in current_map_pool:
+            maps_string += f'{map} ,'
+
+        await ctx.send(maps_string[:-2])
+
         match_config = {
             'matchid': f'PUG {today.strftime("%d-%B-%Y")}',
             'num_maps': 1,
-            'maplist': active_map_pool,
+            'maplist': current_map_pool,
             'skip_veto': False,
             'veto_first': 'team1',
             'side_type': 'always_knife',
@@ -205,6 +212,18 @@ class CSGO(commands.Cog):
     async def connect(self, ctx):
         # TODO: Change to be some image or attachment with server info
         await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
+
+    @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
+                      'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
+                      brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
+    async def map_pool(self, ctx, *, args):
+        global current_map_pool
+        if args == 'active':
+            current_map_pool = active_map_pool.copy()
+        elif args == 'reserve':
+            current_map_pool = reserve_map_pool.copy()
+        else:
+            current_map_pool = args.split().copy()
 
 
 def setup(client):
