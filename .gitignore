@@ -4,6 +4,9 @@ config.json
 # Database
 main.sqlite
 
+# Icon
+icon.png
+
 .idea
 .idea/**
 /.idea
@@ -142,3 +145,5 @@ dmypy.json
 config.json
 main.sqlite
 match_config.json
+icon.png
+icon.png
