@@ -27,7 +27,7 @@ with open('config.json') as config:
 
 @bot.event
 async def on_ready():
-    db = sqlite3.connect('main.sqlite')
+    db = sqlite3.connect('./main.sqlite')
     cursor = db.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users(

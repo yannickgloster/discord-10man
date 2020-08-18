@@ -35,7 +35,7 @@ class Setup(commands.Cog):
             'RCON_password': RCON_password_in
         }
 
-        with open('../config.json', 'w') as outfile:
+        with open('./config.json', 'w') as outfile:
             json.dump(config, outfile, ensure_ascii=False, indent=4)
 
         ctx.send(f'Successfully connected to {bot.server_address}')
@@ -84,7 +84,7 @@ class Setup(commands.Cog):
                 steamID = from_url(f'https://steamcommunity.com/id/{steamID_input}/', http_timeout=15)
                 if steamID is None:
                     raise commands.UserInputError(message='Please enter a valid SteamID or community url.')
-        db = sqlite3.connect('../main.sqlite')
+        db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
         cursor.execute('''
                         REPLACE INTO users (discord_id, steam_id)
@@ -92,6 +92,7 @@ class Setup(commands.Cog):
                         ''', (str(ctx.author), str(steamID.as_steam2_zero),))
         db.commit()
         cursor.close()
+        await ctx.send(f'Connected {steamID.community_url}')
 
     @link.error
     async def link_error(self, ctx, error):

@@ -33,7 +33,7 @@ class CSGO(commands.Cog):
             raise commands.UserInputError(message='You must be in a voice channel.')
         if len(ctx.author.voice.channel.members) < 10:
             raise commands.CommandError(message='There must be 10 members connected to the voice channel')
-        db = sqlite3.connect('../main.sqlite')
+        db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
         # TODO: Add notification for those who don't have their steam account connected
         for member in ctx.author.voice.channel.members:
@@ -167,7 +167,7 @@ class CSGO(commands.Cog):
             }
         }
 
-        with open('../match_config.json', 'w') as outfile:
+        with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
