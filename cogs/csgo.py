@@ -133,12 +133,15 @@ class CSGO(commands.Cog):
         team2_steamIDs = []
 
         for player in team1:
-            player.move_to(channel=bot.team1_channel, reason='you are on team1')
+            if bot.team1_channel is not None:
+                player.move_to(channel=bot.team1_channel, reason='you are on team1')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team1_steamIDs.append(data[0])
 
         for player in team2:
+            if bot.team2_channel is not None:
+                player.move_to(channel=bot.team2_channel, reason='you are on team2')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
