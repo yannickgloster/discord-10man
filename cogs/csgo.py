@@ -154,7 +154,7 @@ class CSGO(commands.Cog):
 
         maps_string = 'Veto Maps Pool: '
         for map in current_map_pool:
-            maps_string += f'{map} ,'
+            maps_string += f'{map}, '
 
         await ctx.send(maps_string[:-2])
 
