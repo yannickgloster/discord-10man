@@ -36,13 +36,18 @@ class CSGO(commands.Cog):
             raise commands.CommandError(message='There must be 10 members connected to the voice channel')
         db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
-        # TODO: Add notification for those who don't have their steam account connected
+        not_connected_members = []
         for member in ctx.author.voice.channel.members:
             cursor.execute('SELECT 1 FROM users WHERE discord_id = ?', (str(member),))
             data = cursor.fetchone()
             if data is None:
-                raise commands.UserInputError(
-                    message='All users in the voice channel must connect their steam account ')
+                not_connected_members.append(member)
+        if len(not_connected_members) > 0:
+            error_message = ''
+            for member in not_connected_members:
+                error_message += f'<@{member.id}> '
+            error_message += 'must connect their steam account with .connect <Steam Profile URL>'
+            raise commands.UserInputError(message=error_message)
 
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
