@@ -16,8 +16,8 @@ current_map_pool = active_map_pool.copy()
 
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-# Veto style 1 2 2 2 2 1, last two 1s are for if we are playing with coaches
-player_veto = [1, 2, 2, 2, 2, 1, 1, 1]
+# Veto style 1 2 2 2 1, last two 1s are for if we are playing with coaches
+player_veto = [1, 2, 2, 2, 1, 1, 1]
 
 
 class CSGO(commands.Cog):
@@ -47,6 +47,7 @@ class CSGO(commands.Cog):
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
         players = ctx.author.voice.channel.members.copy()
+        # players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
         emojis_selected = []
@@ -75,6 +76,7 @@ class CSGO(commands.Cog):
                 players_pretty += f'<@{team2_captain.id}>'
                 current_captain = team2_captain
 
+            print(player_veto_count)
             players_pretty += f' select {player_veto[player_veto_count]}\n'
             players_pretty += 'You have 60 seconds to choose your player(s)\n'
 
@@ -132,6 +134,8 @@ class CSGO(commands.Cog):
         team1_steamIDs = []
         team2_steamIDs = []
 
+        print(bot.team1_channel)
+
         for player in team1:
             if bot.team1_channel is not None:
                 player.move_to(channel=bot.team1_channel, reason='you are on team1')
@@ -182,7 +186,7 @@ class CSGO(commands.Cog):
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await asyncio.sleep(0.3)
-        await CSGO.connect(ctx=ctx)
+        await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
         await ctx.send('If you are coaching, once you join the server, type .coach')
 
         print(match_config_json.attachments[0].url)

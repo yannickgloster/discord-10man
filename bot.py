@@ -13,8 +13,9 @@ server_address: (str, int)
 server_password: str
 RCON_password: str
 
-team1_channel: discord.VoiceChannel
-team2_channel: discord.VoiceChannel
+# TODO: Refactor this, probably bad code but works rn
+team1_channel: discord.VoiceChannel = None
+team2_channel: discord.VoiceChannel = None
 
 # Loading JSON config file
 with open('config.json') as config:
