@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import sqlite3
 import json
+from gsi import server
 
 startup_extensions = ["setup", "csgo"]
 
@@ -39,6 +40,9 @@ async def on_ready():
     global server_address, server_password, RCON_password
 
     print(f'{bot.user} connected.')
+    csgo = server.GSIServer(("127.0.0.1", 3003), "3FE3D7E79693CCDE")
+    csgo.start_server()
+    csgo.get_info("map", "name")
 
 
 @bot.command()
@@ -49,6 +53,7 @@ async def load(ctx, extension):
 @bot.command()
 async def unload(ctx, extension):
     bot.unload_extension(f'cogs.{extension}')
+
 
 for extension in startup_extensions:
     bot.load_extension(f'cogs.{extension}')
