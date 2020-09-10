@@ -197,13 +197,6 @@ class CSGO(commands.Cog):
                                           f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
         print(executeMatch)
 
-        if bot.team1_channel is not None and bot.team2_channel is not None:
-            for player in team1:
-                await player.move_to(channel=bot.team1_channel, reason='you are on team1')
-
-            for player in team2:
-                await player.move_to(channel=bot.team2_channel, reason='you are on team2')
-
         # TODO: when game is over, change the status of the bot
 
     @pug.error
