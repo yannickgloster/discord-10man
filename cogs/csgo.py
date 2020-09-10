@@ -46,7 +46,7 @@ class CSGO(commands.Cog):
             error_message = ''
             for member in not_connected_members:
                 error_message += f'<@{member.id}> '
-            error_message += 'must connect their steam account with .connect <Steam Profile URL>'
+            error_message += 'must connect their steam account with the command ```.connect <Steam Profile URL>```'
             raise commands.UserInputError(message=error_message)
 
         # TODO: Refactor this mess
