@@ -84,7 +84,7 @@ class Setup(commands.Cog):
     @RCON_message.error
     async def RCON_message_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator set the team channel')
+            await ctx.send('Only an administrator send a message using the console')
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Please specify the message')
         traceback.print_exc(error)
@@ -99,7 +99,7 @@ class Setup(commands.Cog):
     @RCON_unban.error
     async def RCON_unban_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator set the team channel')
+            await ctx.send('Only an administrator unban every player')
         traceback.print_exc(error)
 
     @commands.command(hidden=True)
