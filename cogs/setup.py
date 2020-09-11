@@ -48,32 +48,6 @@ class Setup(commands.Cog):
             await ctx.send('RCON authentication failed')
         traceback.print_exc(error)
 
-    @commands.command(help='This command sets the channel that will be used for Team 1.',
-                      brief='Sets the channel for Team 1')
-    @commands.has_permissions(administrator=True)
-    async def setup_team1(self, ctx):
-        bot.team1_channel = ctx.author.voice.channel
-        await ctx.send(f'{bot.team1_channel} is now the channel for Team 1')
-
-    @setup_team1.error
-    async def setup_team1_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator set the team channel')
-        traceback.print_exc(error)
-
-    @commands.command(help='This command sets the channel that will be used for Team 2.',
-                      brief='Sets the channel for Team 2')
-    @commands.has_permissions(administrator=True)
-    async def setup_team2(self, ctx):
-        bot.team2_channel = ctx.author.voice.channel
-        await ctx.send(f'{bot.team2_channel} is now the channel for Team 2')
-
-    @setup_team2.error
-    async def setup_team2_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator set the team channel')
-        traceback.print_exc(error)
-
     @commands.command(help='This command connects users steam account to the bot.',
                       brief='Connect your SteamID to the bot', usage='<SteamID or CommunityURL>')
     async def link(self, ctx, steamID_input):

@@ -1,8 +1,8 @@
 # discord-10man
 
-[//]: # (shields.io)
+[//]: # (https://forthebadge.com/)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/yannickgloster/discord-10man)
+[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/gluten-free.svg)](https://forthebadge.com)
 
 Discord bot for CS:GO Scrims and Pugs
 
@@ -17,7 +17,7 @@ Discord bot for CS:GO Scrims and Pugs
 }
 ```
 
-Perms Integer: 17300544
+Perms Integer: 17300560
 
 Using:
 - [get5 (CSGO Server Plugin)](https://github.com/splewis/get5)

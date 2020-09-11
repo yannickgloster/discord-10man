@@ -9,6 +9,7 @@ import traceback
 import json
 import bot
 
+
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
 reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
@@ -139,18 +140,19 @@ class CSGO(commands.Cog):
         team1_steamIDs = []
         team2_steamIDs = []
 
-        print(bot.team1_channel)
+        team1_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team1_captain}\'s Team',
+                                                                                     user_limit=7)
+        team2_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team2_captain}\'s Team',
+                                                                                     user_limit=7)
 
         for player in team1:
-            if bot.team1_channel is not None:
-                player.move_to(channel=bot.team1_channel, reason='you are on team1')
+            player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team1_steamIDs.append(data[0])
 
         for player in team2:
-            if bot.team2_channel is not None:
-                player.move_to(channel=bot.team2_channel, reason='you are on team2')
+            player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
@@ -173,13 +175,13 @@ class CSGO(commands.Cog):
             'players_per_team': len(team2),
             'min_players_to_ready': 1,
             'team1': {
-                'name': 'team1',
+                'name': f'{team1_captain}\'s Team',
                 'tag': 'team1',
                 'flag': 'IE',
                 'players': team1_steamIDs
             },
             'team2': {
-                'name': 'team2',
+                'name': f'{team2_captain}\'s Team',
                 'tag': 'team2',
                 'flag': 'IE',
                 'players': team2_steamIDs
@@ -191,7 +193,7 @@ class CSGO(commands.Cog):
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await asyncio.sleep(0.3)
-        await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
+        await self.connect(ctx)
         await ctx.send('If you are coaching, once you join the server, type .coach')
 
         print(match_config_json.attachments[0].url)
@@ -219,7 +221,7 @@ class CSGO(commands.Cog):
         await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
 
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
-                      'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
+                                             'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
                       brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
     async def map_pool(self, ctx, *, args):
         global current_map_pool
