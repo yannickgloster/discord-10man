@@ -193,7 +193,7 @@ class CSGO(commands.Cog):
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await asyncio.sleep(0.3)
-        await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
+        await self.connect(ctx)
         await ctx.send('If you are coaching, once you join the server, type .coach')
 
         print(match_config_json.attachments[0].url)
