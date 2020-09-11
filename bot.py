@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import sqlite3
 import json
-from gsi import server
 
 startup_extensions = ["setup", "csgo"]
 
@@ -10,6 +9,7 @@ startup_extensions = ["setup", "csgo"]
 bot = commands.Bot(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.')
 bot_secret: str
 
+# TODO: Refactor these variables to pass through into the init of the cog instead of importing the file
 server_address: (str, int)
 server_password: str
 RCON_password: str
@@ -40,9 +40,6 @@ async def on_ready():
     global server_address, server_password, RCON_password
 
     print(f'{bot.user} connected.')
-    csgo = server.GSIServer(("127.0.0.1", 3003), "3FE3D7E79693CCDE")
-    csgo.start_server()
-    csgo.get_info("map", "name")
 
 
 @bot.command()
