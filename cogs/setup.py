@@ -103,13 +103,14 @@ class Setup(commands.Cog):
         traceback.print_exc(error)
 
     @commands.command(hidden=True)
+    @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int):
         await ctx.channel.purge(limit=amount)
 
     @clear.error
     async def clear_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('Please specify an amount of messages to delete.')
+            await ctx.send('Please specify an amount of messages to delete')
         traceback.print_exc(error)
 
 
