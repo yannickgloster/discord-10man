@@ -1,8 +1,8 @@
 # discord-10man
 
-[//]: # (shields.io)
+[//]: # (https://forthebadge.com/)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/yannickgloster/discord-10man)
+[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/gluten-free.svg)](https://forthebadge.com)
 
 Discord bot for CS:GO Scrims and Pugs
 
@@ -25,4 +25,3 @@ Using:
 - [discord.py[voice] 1.4.1](https://pypi.org/project/discord.py/)
 - [python.valve 0.2.1](https://pypi.org/project/python-valve/)
 - [steam 1.0.2](https://steam.readthedocs.io/en/stable/intro.html#)
-- [csgo-gsi-python](https://github.com/Erlendeikeland/csgo-gsi-python)
