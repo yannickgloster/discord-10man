@@ -146,13 +146,13 @@ class CSGO(commands.Cog):
                                                                                      user_limit=7)
 
         for player in team1:
-            player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
+            await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team1_steamIDs.append(data[0])
 
         for player in team2:
-            player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
+            await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
             cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
