@@ -9,7 +9,6 @@ import traceback
 import json
 import bot
 
-
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
 reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
@@ -53,6 +52,7 @@ class CSGO(commands.Cog):
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
         players = ctx.author.voice.channel.members.copy()
+        # Uncomment for testing
         # players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
@@ -77,8 +77,6 @@ class CSGO(commands.Cog):
 
         while len(players) > 0:
             message_text = ''
-            team1_text = ''
-            team2_text = ''
             players_text = ''
 
             if current_team_player_select == 1:
@@ -95,21 +93,8 @@ class CSGO(commands.Cog):
             for player in players:
                 players_text += f'{emojis[i]} - <@{player.id}>\n'
                 i += 1
-            for team1_player in team1:
-                team1_text += f'<@{team1_player.id}>'
-                if team1_player is team1_captain:
-                    team1_text += ' 👑'
-                team1_text += '\n'
-            for team2_player in team2:
-                team2_text += f'<@{team2_player.id}>'
-                if team2_player is team2_captain:
-                    team2_text += ' 👑'
-                team2_text += '\n'
-
-            embed = discord.Embed()
-            embed.add_field(name=f'Team {team1_player.display_name}', value=team1_text, inline=True)
-            embed.add_field(name='Players', value=players_text, inline=True)
-            embed.add_field(name=f'Team {team2_player.display_name}', value=team2_text, inline=True)
+            embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
+                                           team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
 
             selected_players = 0
@@ -155,33 +140,19 @@ class CSGO(commands.Cog):
 
             player_veto_count += 1
 
-        # TODO: Refactor
         message_text = 'Game Loading'
-        team1_text = ''
-        team2_text = ''
         players_text = 'None'
-        for team1_player in team1:
-            team1_text += f'<@{team1_player.id}>'
-            if team1_player is team1_captain:
-                team1_text += ' 👑'
-            team1_text += '\n'
-        for team2_player in team2:
-            team2_text += f'<@{team2_player.id}>'
-            if team2_player is team2_captain:
-                team2_text += ' 👑'
-            team2_text += '\n'
-
-        embed = discord.Embed()
-        embed.add_field(name=f'Team {team1_player.display_name}', value=team1_text, inline=True)
-        embed.add_field(name='Players', value=players_text, inline=True)
-        embed.add_field(name=f'Team {team2_player.display_name}', value=team2_text, inline=True)
+        embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
+                                       team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
         await message.edit(content=message_text, embed=embed)
 
         team1_steamIDs = []
         team2_steamIDs = []
 
-        team1_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team1_captain.display_name}\'s Team', user_limit=7)
-        team2_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team2_captain.display_name}\'s Team', user_limit=7)
+        team1_channel = await ctx.author.voice.channel.category.create_voice_channel(
+            name=f'{team1_captain.display_name}\'s Team', user_limit=7)
+        team2_channel = await ctx.author.voice.channel.category.create_voice_channel(
+            name=f'{team2_captain.display_name}\'s Team', user_limit=7)
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
@@ -246,6 +217,26 @@ class CSGO(commands.Cog):
         elif isinstance(error, commands.CommandError):
             await ctx.send(error)
         traceback.print_exc(error)
+
+    def player_veto_embed(self, message_text, players_text, team1, team1_captain, team2, team2_captain):
+        team1_text = ''
+        team2_text = ''
+        for team1_player in team1:
+            team1_text += f'<@{team1_player.id}>'
+            if team1_player is team1_captain:
+                team1_text += ' 👑'
+            team1_text += '\n'
+        for team2_player in team2:
+            team2_text += f'<@{team2_player.id}>'
+            if team2_player is team2_captain:
+                team2_text += ' 👑'
+            team2_text += '\n'
+
+        embed = discord.Embed()
+        embed.add_field(name=f'Team {team1_captain.display_name}', value=team1_text, inline=True)
+        embed.add_field(name='Players', value=players_text, inline=True)
+        embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
+        return embed
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
