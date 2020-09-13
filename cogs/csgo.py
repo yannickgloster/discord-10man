@@ -28,7 +28,7 @@ class CSGO(commands.Cog):
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
                            'captains. It then allows those captains to select the members of their '
-                           'team in a 1 2 2 2 2 1 fashion. It then configures the server with the '
+                           'team in a 1 2 2 2 1 fashion. It then configures the server with the '
                            'correct config.', brief='Helps automate setting up a PUG')
     async def pug(self, ctx):
         if not ctx.author.voice or not ctx.author.voice.channel:
