@@ -4,6 +4,7 @@ from random import randint
 from datetime import date
 import sqlite3
 import valve.rcon
+import valve.source.a2s
 import asyncio
 import traceback
 import json
@@ -199,16 +200,13 @@ class CSGO(commands.Cog):
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
-        await asyncio.sleep(0.3)
-        await self.connect(ctx)
         await ctx.send('If you are coaching, once you join the server, type .coach')
-
+        await asyncio.sleep(0.3)
         valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
+        await self.connect(ctx)
         await asyncio.sleep(10)
         valve.rcon.execute(bot.server_address, bot.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
-
-        # TODO: when game is over, change the status of the bot
 
     @pug.error
     async def pug_error(self, ctx, error):
@@ -241,8 +239,19 @@ class CSGO(commands.Cog):
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
     async def connect(self, ctx):
-        # TODO: Change to be some image or attachment with server info
-        await ctx.send(f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}')
+        with valve.source.a2s.ServerQuerier(bot.server_address, timeout=20) as server:
+            info = server.info()
+        embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
+        embed.set_thumbnail(url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
+        embed.add_field(name='Quick Connect',
+                        value=f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}',
+                        inline=False)
+        embed.add_field(name='Console Connect',
+                        value=f'connect {bot.server_address[0]}:{bot.server_address[1]}; password {bot.server_password}',
+                        inline=False)
+        embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
+        embed.add_field(name='Map', value=info['map'], inline=True)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
                                              'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
