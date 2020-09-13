@@ -17,7 +17,7 @@ Discord bot for CS:GO Scrims and Pugs
 }
 ```
 
-Perms Integer: 17300560
+Perms Integer: 285736016
 
 Using:
 - [get5 (CSGO Server Plugin)](https://github.com/splewis/get5)
