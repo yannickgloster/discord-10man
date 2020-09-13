@@ -71,36 +71,46 @@ class CSGO(commands.Cog):
         current_captain = team1_captain
         player_veto_count = 0
 
-        message = await ctx.send('10 man time')
+        message = await ctx.send('10 man time\nLoading player selection...')
+        for emoji in emojis:
+            await message.add_reaction(emoji)
 
         while len(players) > 0:
-            players_pretty = ''
+            message_text = ''
+            team1_text = ''
+            team2_text = ''
+            players_text = ''
+
             if current_team_player_select == 1:
-                players_pretty += f'<@{team1_captain.id}>'
+                message_text += f'<@{team1_captain.id}>'
                 current_captain = team1_captain
             elif current_team_player_select == 2:
-                players_pretty += f'<@{team2_captain.id}>'
+                message_text += f'<@{team2_captain.id}>'
                 current_captain = team2_captain
 
-            print(player_veto_count)
-            players_pretty += f' select {player_veto[player_veto_count]}\n'
-            players_pretty += 'You have 60 seconds to choose your player(s)\n'
+            message_text += f' select {player_veto[player_veto_count]}\n'
+            message_text += 'You have 60 seconds to choose your player(s)\n'
 
             i = 0
             for player in players:
-                players_pretty += f'{emojis[i]} - <@{player.id}>\n'
+                players_text += f'{emojis[i]} - <@{player.id}>\n'
                 i += 1
-            players_pretty += 'Team 1:\n'
             for team1_player in team1:
-                players_pretty += f'<@{team1_player.id}>\n'
-            players_pretty += 'Team 2:\n'
+                team1_text += f'<@{team1_player.id}>'
+                if team1_player is team1_captain:
+                    team1_text += ' 👑'
+                team1_text += '\n'
             for team2_player in team2:
-                players_pretty += f'<@{team2_player.id}>\n'
+                team2_text += f'<@{team2_player.id}>'
+                if team2_player is team2_captain:
+                    team2_text += ' 👑'
+                team2_text += '\n'
 
-            await message.edit(content=players_pretty)
-            if player_veto_count == 0:
-                for emoji in emojis:
-                    await message.add_reaction(emoji)
+            embed = discord.Embed()
+            embed.add_field(name=f'Team {team1_player.display_name}', value=team1_text, inline=True)
+            embed.add_field(name='Players', value=players_text, inline=True)
+            embed.add_field(name=f'Team {team2_player.display_name}', value=team2_text, inline=True)
+            await message.edit(content=message_text, embed=embed)
 
             selected_players = 0
             seconds = 0
@@ -113,18 +123,29 @@ class CSGO(commands.Cog):
                     if current_captain in users and selected_players < player_veto[player_veto_count] and not (
                             reaction.emoji in emojis_selected):
                         index = emojis.index(reaction.emoji)
-                        print(emojis_selected)
                         if current_team_player_select == 1:
                             team1.append(players[index])
                         if current_team_player_select == 2:
                             team2.append(players[index])
-                        print(reaction.emoji)
                         emojis_selected.append(reaction.emoji)
                         del emojis[index]
                         del players[index]
                         selected_players += 1
 
                 seconds += 1
+
+                if seconds % 60 == 0:
+                    for x in range(0, player_veto[player_veto_count]):
+                        index = randint(0, len(players) - 1)
+                        if current_team_player_select == 1:
+                            team1.append(players[index])
+                        if current_team_player_select == 2:
+                            team2.append(players[index])
+                        emojis_selected.append(emojis[index])
+                        del emojis[index]
+                        del players[index]
+                        selected_players += 1
+
                 if selected_players == player_veto[player_veto_count]:
                     if current_team_player_select == 1:
                         current_team_player_select = 2
@@ -132,18 +153,35 @@ class CSGO(commands.Cog):
                         current_team_player_select = 1
                     break
 
-                if seconds % 60 == 0:
-                    await ctx.send(f'<@{team1_captain.id}>')
-                    break
             player_veto_count += 1
+
+        # TODO: Refactor
+        message_text = 'Game Loading'
+        team1_text = ''
+        team2_text = ''
+        players_text = 'None'
+        for team1_player in team1:
+            team1_text += f'<@{team1_player.id}>'
+            if team1_player is team1_captain:
+                team1_text += ' 👑'
+            team1_text += '\n'
+        for team2_player in team2:
+            team2_text += f'<@{team2_player.id}>'
+            if team2_player is team2_captain:
+                team2_text += ' 👑'
+            team2_text += '\n'
+
+        embed = discord.Embed()
+        embed.add_field(name=f'Team {team1_player.display_name}', value=team1_text, inline=True)
+        embed.add_field(name='Players', value=players_text, inline=True)
+        embed.add_field(name=f'Team {team2_player.display_name}', value=team2_text, inline=True)
+        await message.edit(content=message_text, embed=embed)
 
         team1_steamIDs = []
         team2_steamIDs = []
 
-        team1_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team1_captain}\'s Team',
-                                                                                     user_limit=7)
-        team2_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team2_captain}\'s Team',
-                                                                                     user_limit=7)
+        team1_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team1_captain.display_name}\'s Team', user_limit=7)
+        team2_channel = await ctx.author.voice.channel.category.create_voice_channel(name=f'{team2_captain.display_name}\'s Team', user_limit=7)
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
@@ -157,16 +195,14 @@ class CSGO(commands.Cog):
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
 
-        today = date.today()
-
-        maps_string = 'Veto Maps Pool: '
-        for map in current_map_pool:
-            maps_string += f'{map}, '
+        maps_string = 'Map pool for veto: '
+        for cs_map in current_map_pool:
+            maps_string += f'{cs_map}, '
 
         await ctx.send(maps_string[:-2])
 
         match_config = {
-            'matchid': f'PUG {today.strftime("%d-%B-%Y")}',
+            'matchid': f'PUG {date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
             'maplist': current_map_pool,
             'skip_veto': False,
@@ -175,13 +211,13 @@ class CSGO(commands.Cog):
             'players_per_team': len(team2),
             'min_players_to_ready': 1,
             'team1': {
-                'name': f'{team1_captain}\'s Team',
+                'name': f'team {team1_captain.display_name}',
                 'tag': 'team1',
                 'flag': 'IE',
                 'players': team1_steamIDs
             },
             'team2': {
-                'name': f'{team2_captain}\'s Team',
+                'name': f'team {team2_captain.display_name}',
                 'tag': 'team2',
                 'flag': 'IE',
                 'players': team2_steamIDs
@@ -196,13 +232,10 @@ class CSGO(commands.Cog):
         await self.connect(ctx)
         await ctx.send('If you are coaching, once you join the server, type .coach')
 
-        print(match_config_json.attachments[0].url)
-        changeToGet5 = valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
-        print(changeToGet5)
+        valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
         await asyncio.sleep(10)
-        executeMatch = valve.rcon.execute(bot.server_address, bot.RCON_password,
-                                          f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
-        print(executeMatch)
+        valve.rcon.execute(bot.server_address, bot.RCON_password,
+                           f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
         # TODO: when game is over, change the status of the bot
 
