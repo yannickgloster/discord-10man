@@ -4,6 +4,28 @@ import os
 
 
 class VetoImage:
+    '''Represents a veto image
+
+    Object used to create a veto image where the vetoed maps are crossed out
+    with an x
+
+    Attributes
+    -----------
+    map_images_fp: :class:`str`
+        The file path of the CSGO map images preferably in ``.png`` format
+        where the names of the images is the name of the map
+    x_image_fp: :class:`str`
+        The file path of the image containing an x which will be used when
+        crossing out vetoed maps
+    image_extension: :class:`str`
+        The image extension of the image maps which will also be used when
+        creating the result image
+    assets_fp: :class:`str`
+        The file path of a folder where the assets created will be stored
+    font_fp: :class:`str`
+        The file path of the font used when labeling the map icons
+    '''
+
     def __init__(self, map_images_fp, x_image_fp, image_extension, assets_fp='veto_image_assets', font_fp='fonts/Arialbd.TTF'):
         self.map_images_fp = map_images_fp
         self.image_extension = image_extension
@@ -36,6 +58,9 @@ class VetoImage:
             self._image_extension = value
 
     def __crop_map_images(self):
+        '''Creates the map icon assets by cropping them and placing the
+        cropped images into the assets folder
+        '''
         for image_file_name in os.listdir(self.map_images_fp):
             image = Image.open(os.path.join(
                 self.map_images_fp, image_file_name))
@@ -54,6 +79,11 @@ class VetoImage:
             map_strip.save(os.path.join(self.assets_fp, image_file_name))
 
     def __add_map_name(self):
+        '''Adds the map names to each of the maps in the assets folder
+
+        The image is also darkened to enhance clarity
+        '''
+
         for image_file_name in os.listdir(self.assets_fp):
             image_root_name, _ = os.path.splitext(image_file_name)
             image_fp = os.path.join(self.assets_fp, image_file_name)
@@ -74,6 +104,10 @@ class VetoImage:
             darkened_image.save(image_fp)
 
     def __initialise_assets(self):
+        '''Creates the assets by cropping the images and adding the map
+        names
+        '''
+
         assets = pathlib.Path(self.assets_fp)
         assets.mkdir(parents=True, exist_ok=True)
 
@@ -81,6 +115,23 @@ class VetoImage:
         self.__add_map_name()
 
     def construct_veto_image(self, map_list, output_fp, is_vetoed=list(), spacing=0):
+        ''' Outputs an image containing all the maps where all the vetoed
+        maps are crossed out
+
+        Parameters
+        -----------
+        map_list: :class:`list` of :class:`str`
+            The list of maps to be included in the veto image
+        output_fp: :class:`str`
+            The filepath of the output veto image
+        is_vetoed: :class:`list` of :class:`bool`
+            The list of vetoed maps where the indicies match up with the
+            map_list parameter that is if is_vetoed[index] is True,
+            map_list[index] is vetoed
+        spacing: :class:`int`
+            The spacing in pixels between the map icons
+        '''
+
         if not output_fp.endswith(self.image_extension):
             output_fp = output_fp + self.image_extension
 
