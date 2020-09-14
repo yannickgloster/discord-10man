@@ -273,6 +273,8 @@ class CSGO(commands.Cog):
                                             color=discord.Colour(0x650309))
             map_chosen_embed.set_image(url=chosen_map_image_url)
 
+            return map_chosen_embed
+
         map_list = current_map_pool.copy()
         is_vetoed = [False] * len(map_list)
         num_maps_left = len(map_list)
@@ -319,6 +321,11 @@ class CSGO(commands.Cog):
         await temp_channel.delete()
 
         return map_list
+
+    @commands.command()
+    async def test(self, ctx, one: discord.Member, two: discord.Member):
+        temp = await self.map_veto(ctx, one, two)
+        await ctx.send(temp)
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
