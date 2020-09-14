@@ -171,17 +171,13 @@ class CSGO(commands.Cog):
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
 
-        maps_string = 'Map pool for veto: '
-        for cs_map in current_map_pool:
-            maps_string += f'{cs_map}, '
-
-        await ctx.send(maps_string[:-2])
+        map_list = await self.map_veto(ctx, team1_captain, team2_captain)
 
         match_config = {
             'matchid': f'PUG {date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
-            'maplist': current_map_pool,
-            'skip_veto': False,
+            'maplist': map_list,
+            'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
             'players_per_team': len(team2),
@@ -240,8 +236,7 @@ class CSGO(commands.Cog):
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
         return embed
 
-    @commands.command(aliases=['map-veto'])
-    async def map_veto(self, ctx, team1_captain: discord.Member, team2_captain: discord.Member):
+    async def map_veto(self, ctx, team1_captain, team2_captain):
         veto_image_fp = 'result.png'
 
         async def get_embed(current_team_captain, temp_channel):
@@ -307,13 +302,7 @@ class CSGO(commands.Cog):
         await message.clear_reactions()
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
-        await ctx.send(content=str(map_list))
-
-    @map_veto.error
-    async def map_veto_error(self, ctx, error):
-        if isinstance(error, commands.UserInputError):
-            await ctx.send(error)
-        traceback.print_exc(error)
+        return map_list
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
