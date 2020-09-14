@@ -10,6 +10,7 @@ import asyncio
 import traceback
 import json
 import bot
+from utils.veto_image import VetoImage
 
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
@@ -24,8 +25,9 @@ player_veto = [1, 2, 2, 2, 1, 1, 1]
 
 
 class CSGO(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, veto_image):
         self.bot = bot
+        self.veto_image = veto_image
 
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
@@ -240,124 +242,71 @@ class CSGO(commands.Cog):
 
     @commands.command(aliases=['map-veto'])
     async def map_veto(self, ctx, team1_captain: discord.Member, team2_captain: discord.Member):
-        async def create_map_veto_channel(team_captain):
-            guild = ctx.guild
-            current_category = ctx.channel.category
-            reason = 'Used for map veto'
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                self.bot.user: discord.PermissionOverwrite(read_messages=True)
-            }
+        veto_image_fp = 'result.png'
 
-            team_veto_channel = await guild.create_text_channel(f'{team_captain}-map-veto',
-                                                                 overwrites=overwrites,
-                                                                 category=current_category,
-                                                                 reason=reason)
+        async def get_embed(current_team_captain, temp_channel):
+            attachment = discord.File(veto_image_fp, veto_image_fp)
+            img_message = await temp_channel.send(file=attachment)
 
-            return team_veto_channel
-
-        async def send_map_veto_choices(team_veto_channel):
-            for map_name in current_map_pool:
-                file_name = f'{map_name}.png'
-                embed = discord.Embed(title=map_name, colour=discord.Colour(0x650309))\
-                               .set_image(url=f'attachment://{file_name}')
-                attachment = discord.File(f'./images/map_images/{file_name}', file_name)
-                message = await team_veto_channel.send(file=attachment, embed=embed)
-                await message.add_reaction(x_emoji)
-
-        async def setup_map_veto_channel(team_captain):
-            veto_channel = await create_map_veto_channel(team_captain)
-            reason = 'Allow team captains to see the channel'
-            guild = ctx.guild
-            await send_map_veto_choices(veto_channel)
-
-            allow_message_read = discord.PermissionOverwrite(read_messages=True)
-            deny_message_read = discord.PermissionOverwrite(read_messages=False)
-            overwrites = {
-                guild.default_role: deny_message_read,
-                team_captain: allow_message_read,
-                self.bot.user: allow_message_read
-            }
-            await veto_channel.edit(reason=reason, overwrites=overwrites)
-
-            return veto_channel
-
-        def get_next_vetoed_map_name(veto_channel_messages):
-            def is_vetoed(message):
-                reactions = message.reactions
-                is_x_emoji = lambda reaction: reaction.emoji == x_emoji
-                x_emoji_reaction = next(filter(is_x_emoji, reactions), None)
-
-                if x_emoji_reaction:
-                    return x_emoji_reaction.count > 1
-                return False
-
-            vetoed_map_message = next(filter(is_vetoed, veto_channel_messages), None)
-
-            if vetoed_map_message:
-                return vetoed_map_message.embeds[0].title
-            return ""
-        
-        async def remove_vetoed_map_message(vetoed_map_name, veto_channel_messages):
-            if not vetoed_map_name:
-                return
-
-            is_vetoed_map_message = lambda message: message.embeds[0].title == vetoed_map_name
-            veteod_map_message = next(filter(is_vetoed_map_message, veto_channel_messages), None)
-
-            if veteod_map_message:
-                await veteod_map_message.delete()
-
-        def get_turn_message_embed(current_team_captain):
-            embed = discord.Embed(colour=discord.Colour(0x650309))\
-                           .set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
-                                       icon_url=current_team_captain.avatar_url)
+            embed = discord.Embed(title='```Map veto```', color=discord.Colour(0x650309))
+            embed.set_image(url=img_message.attachments[0].url)
+            embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
+                             icon_url=current_team_captain.avatar_url)
             return embed
         
-        (team1_veto_channel, team2_veto_channel) = await asyncio.gather(setup_map_veto_channel(team1_captain),
-                                                                        setup_map_veto_channel(team2_captain))
+        async def add_reactions(message, num_maps):
+            for index in range(1, num_maps + 1):
+                await message.add_reaction(emoji_bank[index])
+        
+        async def get_next_map_veto(message, current_team_captain):
+            index = 0
+            for reaction in message.reactions:
+                users = await reaction.users().flatten()
+                if (reaction.emoji in emoji_bank and not is_vetoed[index] and
+                        current_team_captain in users):
+                    return map_list[index]
+                index += 1
 
+        map_list = current_map_pool.copy()
+        is_vetoed = [False] * len(map_list)
+        num_maps_left = len(map_list)
         current_team_captain = choice((team1_captain, team2_captain))
-        turn_message_embed = get_turn_message_embed(current_team_captain)
-        turn_messages = await asyncio.gather(team1_veto_channel.send(embed=turn_message_embed),
-                                             team2_veto_channel.send(embed=turn_message_embed))
 
-        current_map_pool_copy = current_map_pool.copy()
-        num_maps_left = len(current_map_pool)
+        current_category = ctx.channel.category
+        temp_channel = await ctx.guild.create_text_channel('temp', category=current_category)
 
-        is_bot_message = lambda message: message.author == self.bot.user
+        self.veto_image.construct_veto_image(map_list, veto_image_fp,
+                                             is_vetoed=is_vetoed, spacing=25)
+        embed = await get_embed(current_team_captain, temp_channel)
+        message = await ctx.send(embed=embed)
+
+        await add_reactions(message, len(map_list))
 
         while num_maps_left > 1:
-            team1_veto_channel_bot_messages = list(filter(is_bot_message,
-                                                          await team1_veto_channel.history().flatten()))
-            team2_veto_channel_bot_messages = list(filter(is_bot_message,
-                                                          await team2_veto_channel.history().flatten()))
-            vetoed_map_name = ""
+            message = await ctx.fetch_message(message.id)
 
             if current_team_captain == team1_captain:
-                vetoed_map_name = get_next_vetoed_map_name(team1_veto_channel_bot_messages)
-                if vetoed_map_name:
+                if map_vetoed := await get_next_map_veto(message, current_team_captain):
                     current_team_captain = team2_captain
             else:
-                vetoed_map_name = get_next_vetoed_map_name(team2_veto_channel_bot_messages)
-                if vetoed_map_name:
+                if map_vetoed := await get_next_map_veto(message, current_team_captain):
                     current_team_captain = team1_captain
 
-            if vetoed_map_name in current_map_pool_copy:
-                current_map_pool_copy.remove(vetoed_map_name)
-                await remove_vetoed_map_message(vetoed_map_name, team1_veto_channel_bot_messages)
-                await remove_vetoed_map_message(vetoed_map_name, team2_veto_channel_bot_messages)
-
-            turn_message_embed = get_turn_message_embed(current_team_captain)
-            for turn_message in turn_messages:
-                await turn_message.edit(embed=turn_message_embed)
-
-            num_maps_left = len(current_map_pool_copy)
+            if map_vetoed:
+                is_vetoed[map_list.index(map_vetoed)] = True
+                self.veto_image.construct_veto_image(map_list, veto_image_fp,
+                                                     is_vetoed=is_vetoed, spacing=25)
+                embed = await get_embed(current_team_captain, temp_channel)
+                await message.edit(embed=embed)
+                num_maps_left -= 1
+            
             await asyncio.sleep(1)
 
-        await asyncio.gather(team1_veto_channel.delete(), team2_veto_channel.delete())
+        await temp_channel.delete()
+        await message.clear_reactions()
+        map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
-        await ctx.send(content=str(current_map_pool_copy))
+        await ctx.send(content=str(map_list))
 
     @map_veto.error
     async def map_veto_error(self, ctx, error):
@@ -396,4 +345,5 @@ class CSGO(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(CSGO(client))
+    veto_image_generator = VetoImage('images/map_images', 'images/x.png', 'png')
+    client.add_cog(CSGO(client, veto_image_generator))
