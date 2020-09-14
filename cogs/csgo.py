@@ -1,15 +1,17 @@
+import asyncio
+import bot
 import discord
-from discord.ext import commands
-from random import randint
-from random import choice
-from datetime import date
+import json
+import os
 import sqlite3
+import traceback
 import valve.rcon
 import valve.source.a2s
-import asyncio
-import traceback
-import json
-import bot
+
+from datetime import date
+from discord.ext import commands
+from random import choice
+from random import randint
 from utils.veto_image import VetoImage
 
 # TODO: Allow administrators to update the maplist
@@ -125,7 +127,7 @@ class CSGO(commands.Cog):
                 seconds += 1
 
                 if seconds % 60 == 0:
-                    for x in range(0, player_veto[player_veto_count]):
+                    for _ in range(0, player_veto[player_veto_count]):
                         index = randint(0, len(players) - 1)
                         if current_team_player_select == 1:
                             team1.append(players[index])
@@ -243,7 +245,7 @@ class CSGO(commands.Cog):
             attachment = discord.File(veto_image_fp, veto_image_fp)
             img_message = await temp_channel.send(file=attachment)
 
-            embed = discord.Embed(title='```Map veto```', color=discord.Colour(0x650309))
+            embed = discord.Embed(title='__Map veto__', color=discord.Colour(0x650309))
             embed.set_image(url=img_message.attachments[0].url)
             embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
                              icon_url=current_team_captain.avatar_url)
@@ -260,6 +262,16 @@ class CSGO(commands.Cog):
                 if (reaction.emoji in emoji_bank and not is_vetoed[index] and
                         current_team_captain in users):
                     return map_list[index]
+
+        async def get_chosen_map_embed(chosen_map):
+            chosen_map_file_name = chosen_map + self.veto_image.image_extension
+            chosen_map_fp = os.path.join(self.veto_image.map_images_fp, chosen_map_file_name)
+            attachment = discord.File(chosen_map_fp, chosen_map_file_name)
+            image_message = await temp_channel.send(file=attachment)
+            chosen_map_image_url = image_message.attachments[0].url
+            map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
+                                            color=discord.Colour(0x650309))
+            map_chosen_embed.set_image(url=chosen_map_image_url)
 
         map_list = current_map_pool.copy()
         is_vetoed = [False] * len(map_list)
@@ -298,9 +310,13 @@ class CSGO(commands.Cog):
             
             await asyncio.sleep(1)
 
-        await temp_channel.delete()
-        await message.clear_reactions()
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
+
+        await message.clear_reactions()
+        chosen_map = map_list[0] 
+        chosen_map_embed = await get_chosen_map_embed(chosen_map)
+        await message.edit(embed=chosen_map_embed)
+        await temp_channel.delete()
 
         return map_list
 
