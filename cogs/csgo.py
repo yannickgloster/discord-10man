@@ -20,7 +20,6 @@ reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
 current_map_pool = active_map_pool.copy()
 
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
-x_emoji = '❌'
 
 # Veto style 1 2 2 2 1, last two 1s are for if we are playing with coaches
 player_veto = [1, 2, 2, 2, 1, 1, 1]
