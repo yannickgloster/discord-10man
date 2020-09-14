@@ -258,10 +258,10 @@ class CSGO(commands.Cog):
 
         async def send_map_veto_choices(team_veto_channel):
             for map_name in current_map_pool:
-                file_name = f'{map_name}.jpg'
+                file_name = f'{map_name}.png'
                 embed = discord.Embed(title=map_name, colour=discord.Colour(0x650309))\
                                .set_image(url=f'attachment://{file_name}')
-                attachment = discord.File(f'./images/{file_name}', file_name)
+                attachment = discord.File(f'./images/map_images/{file_name}', file_name)
                 message = await team_veto_channel.send(file=attachment, embed=embed)
                 await message.add_reaction(x_emoji)
 
