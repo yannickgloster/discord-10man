@@ -259,13 +259,12 @@ class CSGO(commands.Cog):
                 await message.add_reaction(emoji_bank[index])
         
         async def get_next_map_veto(message, current_team_captain):
-            index = 0
             for reaction in message.reactions:
                 users = await reaction.users().flatten()
+                index = emoji_bank.index(reaction.emoji) - 1
                 if (reaction.emoji in emoji_bank and not is_vetoed[index] and
                         current_team_captain in users):
                     return map_list[index]
-                index += 1
 
         map_list = current_map_pool.copy()
         is_vetoed = [False] * len(map_list)
@@ -293,11 +292,13 @@ class CSGO(commands.Cog):
                     current_team_captain = team1_captain
 
             if map_vetoed:
-                is_vetoed[map_list.index(map_vetoed)] = True
+                vetoed_map_index = map_list.index(map_vetoed)
+                is_vetoed[vetoed_map_index] = True
                 self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                                      is_vetoed=is_vetoed, spacing=25)
                 embed = await get_embed(current_team_captain, temp_channel)
                 await message.edit(embed=embed)
+                await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
                 num_maps_left -= 1
             
             await asyncio.sleep(1)
