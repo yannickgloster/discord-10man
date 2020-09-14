@@ -238,9 +238,36 @@ class CSGO(commands.Cog):
         return embed
 
     async def map_veto(self, ctx, team1_captain, team2_captain):
+        '''Returns :class:`list` of :class:`str` which is the remaining map
+        after the veto
+
+        Embed image updates as the maps are vetoed. The team captains can
+        veto a map by reacting to the map number to be vetoed
+
+        Parameters
+        -----------
+        ctx: :class:`discord.Context`
+            The context object provided
+        team1_captain: :class:`discord.Member`
+            One of the team captains
+        team2_captain: :class:`discord.Member`
+            The other team captain
+        '''
+        
         veto_image_fp = 'result.png'
 
         async def get_embed(current_team_captain, temp_channel):
+            ''' Returns :class:`discord.Embed` which contains the map veto
+            image and the current team captain who has to make a veto
+
+            Parameters
+            -----------
+            current_team_captain: :class:`discord.Member`
+                The current team captain
+            temp_channel: :class:`discord.TextChannel`
+                A temporary channel which will be used to store the veto
+                embed images
+            '''
             attachment = discord.File(veto_image_fp, veto_image_fp)
             img_message = await temp_channel.send(file=attachment)
 
@@ -251,10 +278,31 @@ class CSGO(commands.Cog):
             return embed
         
         async def add_reactions(message, num_maps):
+            ''' Adds the number emoji reactions to the message. This is used
+            to select the veto map
+
+            Parameters
+            -----------
+            message: :class:`discord.Message`
+                The veto message to add the number emoji reactions to
+            num_maps: :class:`int`
+                The number of maps there are to chose from
+            '''
+
             for index in range(1, num_maps + 1):
                 await message.add_reaction(emoji_bank[index])
         
         async def get_next_map_veto(message, current_team_captain):
+            ''' Obtains the next map which was vetoed
+
+            Parameters
+            -----------
+            message: :class:`discord.Message`
+                The veto message which has the number emoji reactions
+            num_maps: :class:`discord.Member`
+                The current team captain
+            '''
+
             for reaction in message.reactions:
                 users = await reaction.users().flatten()
                 index = emoji_bank.index(reaction.emoji) - 1
@@ -263,6 +311,15 @@ class CSGO(commands.Cog):
                     return map_list[index]
 
         async def get_chosen_map_embed(chosen_map):
+            ''' Returns a :class:`discord.Embed` which contains an image of
+            the map chosen on completion of the veto
+
+            Parameters
+            -----------
+            chosen_map: :class:`str`
+                The chosen map name string
+            '''
+
             chosen_map_file_name = chosen_map + self.veto_image.image_extension
             chosen_map_fp = os.path.join(self.veto_image.map_images_fp, chosen_map_file_name)
             attachment = discord.File(chosen_map_fp, chosen_map_file_name)
