@@ -322,11 +322,6 @@ class CSGO(commands.Cog):
 
         return map_list
 
-    @commands.command()
-    async def test(self, ctx, one: discord.Member, two: discord.Member):
-        temp = await self.map_veto(ctx, one, two)
-        await ctx.send(temp)
-
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
     async def connect(self, ctx):
