@@ -41,7 +41,7 @@ class WebServer:
         """
 
         # or "Authorization"
-        if request.method != "POST" not in request.headers:
+        if request.method != 'POST':
             # Used to decline any requests what doesn't match what our
             # API expects.
 
