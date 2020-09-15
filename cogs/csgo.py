@@ -33,7 +33,7 @@ class CSGO(commands.Cog):
     async def pug(self, ctx):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.UserInputError(message='You must be in a voice channel.')
-        if len(ctx.author.voice.channel.members) < 10:
+        if len(ctx.author.voice.channel.members) < 10 and not self.bot.dev:
             raise commands.CommandError(message='There must be 10 members connected to the voice channel')
         db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
@@ -53,8 +53,8 @@ class CSGO(commands.Cog):
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
         players = ctx.author.voice.channel.members.copy()
-        # Uncomment for testing
-        # players = [ctx.author] * 10
+        if self.bot.dev:
+            players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
         emojis_selected = []
@@ -114,6 +114,7 @@ class CSGO(commands.Cog):
                         if current_team_player_select == 2:
                             team2.append(players[index])
                         emojis_selected.append(reaction.emoji)
+                        await message.clear_reaction(reaction.emoji)
                         del emojis[index]
                         del players[index]
                         selected_players += 1

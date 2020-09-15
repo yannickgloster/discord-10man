@@ -39,6 +39,8 @@ async def on_ready():
                                                                                     name='CSGO Pug'))
     global server_address, server_password, RCON_password
 
+    if bot.user.id is 745000319942918303:
+        bot.dev = True
     print(f'{bot.user} connected.')
 
 
