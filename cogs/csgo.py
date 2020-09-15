@@ -303,12 +303,11 @@ class CSGO(commands.Cog):
                 The current team captain
             '''
 
-            for reaction in message.reactions:
-                users = await reaction.users().flatten()
-                index = emoji_bank.index(reaction.emoji) - 1
-                if (reaction.emoji in emoji_bank and not is_vetoed[index] and
-                        current_team_captain in users):
-                    return map_list[index]
+            check = lambda reaction, user: reaction.emoji in emoji_bank and user == current_team_captain
+            (reaction, _) = await self.bot.wait_for('reaction_add', check=check)
+            index = emoji_bank.index(reaction.emoji) - 1
+
+            return map_list[index]
 
         async def get_chosen_map_embed(chosen_map):
             ''' Returns a :class:`discord.Embed` which contains an image of
@@ -349,24 +348,23 @@ class CSGO(commands.Cog):
         while num_maps_left > 1:
             message = await ctx.fetch_message(message.id)
 
-            if current_team_captain == team1_captain:
-                if map_vetoed := await get_next_map_veto(message, current_team_captain):
-                    current_team_captain = team2_captain
-            else:
-                if map_vetoed := await get_next_map_veto(message, current_team_captain):
-                    current_team_captain = team1_captain
+            map_vetoed = await get_next_map_veto(message, current_team_captain)
+            vetoed_map_index = map_list.index(map_vetoed)
+            is_vetoed[vetoed_map_index] = True
 
-            if map_vetoed:
-                vetoed_map_index = map_list.index(map_vetoed)
-                is_vetoed[vetoed_map_index] = True
-                self.veto_image.construct_veto_image(map_list, veto_image_fp,
-                                                     is_vetoed=is_vetoed, spacing=25)
-                embed = await get_embed(current_team_captain, temp_channel)
-                await message.edit(embed=embed)
-                await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
-                num_maps_left -= 1
-            
-            await asyncio.sleep(1)
+            if current_team_captain == team1_captain:
+                current_team_captain = team2_captain
+            else:
+                current_team_captain = team1_captain
+
+            self.veto_image.construct_veto_image(map_list, veto_image_fp,
+                                                    is_vetoed=is_vetoed, spacing=25)
+            embed = await get_embed(current_team_captain, temp_channel)
+            await message.edit(embed=embed)
+            await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
+
+            num_maps_left -= 1
+
 
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
@@ -377,6 +375,10 @@ class CSGO(commands.Cog):
         await temp_channel.delete()
 
         return map_list
+    
+    @commands.command()
+    async def test(self, ctx, one: discord.Member, two: discord.Member):
+        await self.map_veto(ctx, one, two)
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
