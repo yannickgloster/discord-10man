@@ -25,3 +25,4 @@ Using:
 - [discord.py[voice] 1.4.1](https://pypi.org/project/discord.py/)
 - [python.valve 0.2.1](https://pypi.org/project/python-valve/)
 - [steam 1.0.2](https://steam.readthedocs.io/en/stable/intro.html#)
+- [aiohttp[speedups]](https://docs.aiohttp.org/en/stable/index.html#aiohttp-installation)
