@@ -375,10 +375,6 @@ class CSGO(commands.Cog):
         await temp_channel.delete()
 
         return map_list
-    
-    @commands.command()
-    async def test(self, ctx, one: discord.Member, two: discord.Member):
-        await self.map_veto(ctx, one, two)
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
