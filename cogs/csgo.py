@@ -1,14 +1,18 @@
+import asyncio
+import bot
 import discord
-from discord.ext import commands
-from random import randint
-from datetime import date
+import json
+import os
 import sqlite3
+import traceback
 import valve.rcon
 import valve.source.a2s
-import asyncio
-import traceback
-import json
-import bot
+
+from datetime import date
+from discord.ext import commands
+from random import choice
+from random import randint
+from utils.veto_image import VetoImage
 
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
@@ -22,18 +26,19 @@ player_veto = [1, 2, 2, 2, 1, 1, 1]
 
 
 class CSGO(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, veto_image):
         self.bot = bot
+        self.veto_image = veto_image
 
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
                            'captains. It then allows those captains to select the members of their '
-                           'team in a 1 2 2 2 2 1 fashion. It then configures the server with the '
+                           'team in a 1 2 2 2 1 fashion. It then configures the server with the '
                            'correct config.', brief='Helps automate setting up a PUG')
     async def pug(self, ctx):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.UserInputError(message='You must be in a voice channel.')
-        if len(ctx.author.voice.channel.members) < 10:
+        if len(ctx.author.voice.channel.members) < 10 and not self.bot.dev:
             raise commands.CommandError(message='There must be 10 members connected to the voice channel')
         db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
@@ -47,14 +52,15 @@ class CSGO(commands.Cog):
             error_message = ''
             for member in not_connected_members:
                 error_message += f'<@{member.id}> '
-            error_message += 'must connect their steam account with the command ```.connect <Steam Profile URL>```'
+            error_message += 'must connect their steam account with the command ```.link <Steam Profile URL>```'
             raise commands.UserInputError(message=error_message)
 
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
+        channel_original = ctx.author.voice.channel
         players = ctx.author.voice.channel.members.copy()
-        # Uncomment for testing
-        # players = [ctx.author] * 10
+        if self.bot.dev:
+            players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
         emojis_selected = []
@@ -114,6 +120,7 @@ class CSGO(commands.Cog):
                         if current_team_player_select == 2:
                             team2.append(players[index])
                         emojis_selected.append(reaction.emoji)
+                        await message.clear_reaction(reaction.emoji)
                         del emojis[index]
                         del players[index]
                         selected_players += 1
@@ -121,7 +128,7 @@ class CSGO(commands.Cog):
                 seconds += 1
 
                 if seconds % 60 == 0:
-                    for x in range(0, player_veto[player_veto_count]):
+                    for _ in range(0, player_veto[player_veto_count]):
                         index = randint(0, len(players) - 1)
                         if current_team_player_select == 1:
                             team1.append(players[index])
@@ -167,17 +174,13 @@ class CSGO(commands.Cog):
             data = cursor.fetchone()
             team2_steamIDs.append(data[0])
 
-        maps_string = 'Map pool for veto: '
-        for cs_map in current_map_pool:
-            maps_string += f'{cs_map}, '
-
-        await ctx.send(maps_string[:-2])
+        map_list = await self.map_veto(ctx, team1_captain, team2_captain)
 
         match_config = {
-            'matchid': f'PUG {date.today().strftime("%d-%B-%Y")}',
+            'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
-            'maplist': current_map_pool,
-            'skip_veto': False,
+            'maplist': map_list,
+            'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
             'players_per_team': len(team2),
@@ -193,6 +196,10 @@ class CSGO(commands.Cog):
                 'tag': 'team2',
                 'flag': 'IE',
                 'players': team2_steamIDs
+            },
+            'cvars': {
+                'get5_web_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/',
+                'get5_web_api_key': 'ABC'
             }
         }
 
@@ -204,9 +211,12 @@ class CSGO(commands.Cog):
         await asyncio.sleep(0.3)
         valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
         await self.connect(ctx)
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         valve.rcon.execute(bot.server_address, bot.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
+
+        self.bot.web_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
+                                        players=team1+team2)
 
     @pug.error
     async def pug_error(self, ctx, error):
@@ -236,13 +246,154 @@ class CSGO(commands.Cog):
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
         return embed
 
+    async def map_veto(self, ctx, team1_captain, team2_captain):
+        '''Returns :class:`list` of :class:`str` which is the remaining map
+        after the veto
+
+        Embed image updates as the maps are vetoed. The team captains can
+        veto a map by reacting to the map number to be vetoed
+
+        Parameters
+        -----------
+        ctx: :class:`discord.Context`
+            The context object provided
+        team1_captain: :class:`discord.Member`
+            One of the team captains
+        team2_captain: :class:`discord.Member`
+            The other team captain
+        '''
+
+        veto_image_fp = 'result.png'
+
+        async def get_embed(current_team_captain, temp_channel):
+            ''' Returns :class:`discord.Embed` which contains the map veto
+            image and the current team captain who has to make a veto
+
+            Parameters
+            -----------
+            current_team_captain: :class:`discord.Member`
+                The current team captain
+            temp_channel: :class:`discord.TextChannel`
+                A temporary channel which will be used to store the veto
+                embed images
+            '''
+            attachment = discord.File(veto_image_fp, veto_image_fp)
+            img_message = await temp_channel.send(file=attachment)
+
+            embed = discord.Embed(title='__Map veto__',
+                                  color=discord.Colour(0x650309))
+            embed.set_image(url=img_message.attachments[0].url)
+            embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
+                             icon_url=current_team_captain.avatar_url)
+            return embed
+
+        async def add_reactions(message, num_maps):
+            ''' Adds the number emoji reactions to the message. This is used
+            to select the veto map
+
+            Parameters
+            -----------
+            message: :class:`discord.Message`
+                The veto message to add the number emoji reactions to
+            num_maps: :class:`int`
+                The number of maps there are to chose from
+            '''
+
+            for index in range(1, num_maps + 1):
+                await message.add_reaction(emoji_bank[index])
+
+        async def get_next_map_veto(message, current_team_captain):
+            ''' Obtains the next map which was vetoed
+
+            Parameters
+            -----------
+            message: :class:`discord.Message`
+                The veto message which has the number emoji reactions
+            num_maps: :class:`discord.Member`
+                The current team captain
+            '''
+
+            check = lambda reaction, user: reaction.emoji in emoji_bank and user == current_team_captain
+            (reaction, _) = await self.bot.wait_for('reaction_add', check=check)
+            index = emoji_bank.index(reaction.emoji) - 1
+
+            return map_list[index]
+
+        async def get_chosen_map_embed(chosen_map):
+            ''' Returns a :class:`discord.Embed` which contains an image of
+            the map chosen on completion of the veto
+
+            Parameters
+            -----------
+            chosen_map: :class:`str`
+                The chosen map name string
+            '''
+
+            chosen_map_file_name = chosen_map + self.veto_image.image_extension
+            chosen_map_fp = os.path.join(
+                self.veto_image.map_images_fp, chosen_map_file_name)
+            attachment = discord.File(chosen_map_fp, chosen_map_file_name)
+            image_message = await temp_channel.send(file=attachment)
+            chosen_map_image_url = image_message.attachments[0].url
+            map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
+                                             color=discord.Colour(0x650309))
+            map_chosen_embed.set_image(url=chosen_map_image_url)
+
+            return map_chosen_embed
+
+        map_list = current_map_pool.copy()
+        is_vetoed = [False] * len(map_list)
+        num_maps_left = len(map_list)
+        current_team_captain = choice((team1_captain, team2_captain))
+
+        current_category = ctx.channel.category
+        temp_channel = await ctx.guild.create_text_channel('temp', category=current_category)
+
+        self.veto_image.construct_veto_image(map_list, veto_image_fp,
+                                             is_vetoed=is_vetoed, spacing=25)
+        embed = await get_embed(current_team_captain, temp_channel)
+        message = await ctx.send(embed=embed)
+
+        await add_reactions(message, len(map_list))
+
+        while num_maps_left > 1:
+            message = await ctx.fetch_message(message.id)
+
+            map_vetoed = await get_next_map_veto(message, current_team_captain)
+            vetoed_map_index = map_list.index(map_vetoed)
+            is_vetoed[vetoed_map_index] = True
+
+            if current_team_captain == team1_captain:
+                current_team_captain = team2_captain
+            else:
+                current_team_captain = team1_captain
+
+            self.veto_image.construct_veto_image(map_list, veto_image_fp,
+                                                 is_vetoed=is_vetoed, spacing=25)
+            embed = await get_embed(current_team_captain, temp_channel)
+            await message.edit(embed=embed)
+            await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
+
+            num_maps_left -= 1
+
+        map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
+
+        await message.clear_reactions()
+        chosen_map = map_list[0]
+        chosen_map_embed = await get_chosen_map_embed(chosen_map)
+        await message.edit(embed=chosen_map_embed)
+        await temp_channel.delete()
+
+        return map_list
+
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
     async def connect(self, ctx):
         with valve.source.a2s.ServerQuerier(bot.server_address, timeout=20) as server:
             info = server.info()
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
-        embed.set_thumbnail(url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
+        embed.set_thumbnail(
+            url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
         embed.add_field(name='Quick Connect',
                         value=f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}',
                         inline=False)
@@ -267,4 +418,5 @@ class CSGO(commands.Cog):
 
 
 def setup(client):
-    client.add_cog(CSGO(client))
+    veto_image_generator = VetoImage('images/map_images', 'images/x.png', 'png')
+    client.add_cog(CSGO(client, veto_image_generator))

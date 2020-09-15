@@ -1,3 +1,9 @@
+# Map Veto
+veto_image_assets
+/veto_image_assets
+/veto_image_assets/**
+result.png
+
 # Config Files
 config.json
 
