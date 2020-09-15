@@ -253,7 +253,7 @@ class CSGO(commands.Cog):
         team2_captain: :class:`discord.Member`
             The other team captain
         '''
-        
+
         veto_image_fp = 'result.png'
 
         async def get_embed(current_team_captain, temp_channel):
@@ -271,12 +271,13 @@ class CSGO(commands.Cog):
             attachment = discord.File(veto_image_fp, veto_image_fp)
             img_message = await temp_channel.send(file=attachment)
 
-            embed = discord.Embed(title='__Map veto__', color=discord.Colour(0x650309))
+            embed = discord.Embed(title='__Map veto__',
+                                  color=discord.Colour(0x650309))
             embed.set_image(url=img_message.attachments[0].url)
             embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
                              icon_url=current_team_captain.avatar_url)
             return embed
-        
+
         async def add_reactions(message, num_maps):
             ''' Adds the number emoji reactions to the message. This is used
             to select the veto map
@@ -291,7 +292,7 @@ class CSGO(commands.Cog):
 
             for index in range(1, num_maps + 1):
                 await message.add_reaction(emoji_bank[index])
-        
+
         async def get_next_map_veto(message, current_team_captain):
             ''' Obtains the next map which was vetoed
 
@@ -320,12 +321,13 @@ class CSGO(commands.Cog):
             '''
 
             chosen_map_file_name = chosen_map + self.veto_image.image_extension
-            chosen_map_fp = os.path.join(self.veto_image.map_images_fp, chosen_map_file_name)
+            chosen_map_fp = os.path.join(
+                self.veto_image.map_images_fp, chosen_map_file_name)
             attachment = discord.File(chosen_map_fp, chosen_map_file_name)
             image_message = await temp_channel.send(file=attachment)
             chosen_map_image_url = image_message.attachments[0].url
             map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
-                                            color=discord.Colour(0x650309))
+                                             color=discord.Colour(0x650309))
             map_chosen_embed.set_image(url=chosen_map_image_url)
 
             return map_chosen_embed
@@ -358,18 +360,17 @@ class CSGO(commands.Cog):
                 current_team_captain = team1_captain
 
             self.veto_image.construct_veto_image(map_list, veto_image_fp,
-                                                    is_vetoed=is_vetoed, spacing=25)
+                                                 is_vetoed=is_vetoed, spacing=25)
             embed = await get_embed(current_team_captain, temp_channel)
             await message.edit(embed=embed)
             await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
 
             num_maps_left -= 1
 
-
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
         await message.clear_reactions()
-        chosen_map = map_list[0] 
+        chosen_map = map_list[0]
         chosen_map_embed = await get_chosen_map_embed(chosen_map)
         await message.edit(embed=chosen_map_embed)
         await temp_channel.delete()
