@@ -33,8 +33,8 @@ class CSGO(commands.Cog):
     async def pug(self, ctx):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.UserInputError(message='You must be in a voice channel.')
-        # if len(ctx.author.voice.channel.members) < 10:
-        #     raise commands.CommandError(message='There must be 10 members connected to the voice channel')
+        if len(ctx.author.voice.channel.members) < 10:
+            raise commands.CommandError(message='There must be 10 members connected to the voice channel')
         db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
         not_connected_members = []
@@ -55,7 +55,7 @@ class CSGO(commands.Cog):
         channel_original = ctx.author.voice.channel
         players = ctx.author.voice.channel.members.copy()
         # Uncomment for testing
-        players = [ctx.author] * 10
+        # players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
         emojis_selected = []
