@@ -13,6 +13,7 @@ greenlet==0.4.16
 idna==2.10
 monotonic==1.5
 multidict==4.7.6
+Pillow==7.2.0
 protobuf==3.12.4
 pycparser==2.20
 pycryptodomex==3.9.8
