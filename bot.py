@@ -2,6 +2,9 @@ import discord
 from discord.ext import commands
 import sqlite3
 import json
+from utils.server import WebServer
+
+__version__ = '0.5.0'
 
 startup_extensions = ["setup", "csgo"]
 
@@ -38,7 +41,8 @@ async def on_ready():
                                                                                     state='Waiting', details='Waiting',
                                                                                     name='CSGO Pug'))
     global server_address, server_password, RCON_password
-
+    bot.web_server = WebServer(bot=bot)
+    await bot.web_server.http_start()
     print(f'{bot.user} connected.')
 
 

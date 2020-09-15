@@ -33,8 +33,8 @@ class CSGO(commands.Cog):
     async def pug(self, ctx):
         if not ctx.author.voice or not ctx.author.voice.channel:
             raise commands.UserInputError(message='You must be in a voice channel.')
-        if len(ctx.author.voice.channel.members) < 10:
-            raise commands.CommandError(message='There must be 10 members connected to the voice channel')
+        # if len(ctx.author.voice.channel.members) < 10:
+        #     raise commands.CommandError(message='There must be 10 members connected to the voice channel')
         db = sqlite3.connect('./main.sqlite')
         cursor = db.cursor()
         not_connected_members = []
@@ -47,14 +47,15 @@ class CSGO(commands.Cog):
             error_message = ''
             for member in not_connected_members:
                 error_message += f'<@{member.id}> '
-            error_message += 'must connect their steam account with the command ```.connect <Steam Profile URL>```'
+            error_message += 'must connect their steam account with the command ```.link <Steam Profile URL>```'
             raise commands.UserInputError(message=error_message)
 
         # TODO: Refactor this mess
         # TODO: Add a way to cancel
+        channel_original = ctx.author.voice.channel
         players = ctx.author.voice.channel.members.copy()
         # Uncomment for testing
-        # players = [ctx.author] * 10
+        players = [ctx.author] * 10
         emojis = emoji_bank.copy()
         del emojis[len(players) - 2:len(emojis)]
         emojis_selected = []
@@ -174,7 +175,7 @@ class CSGO(commands.Cog):
         await ctx.send(maps_string[:-2])
 
         match_config = {
-            'matchid': f'PUG {date.today().strftime("%d-%B-%Y")}',
+            'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
             'maplist': current_map_pool,
             'skip_veto': False,
@@ -193,6 +194,10 @@ class CSGO(commands.Cog):
                 'tag': 'team2',
                 'flag': 'IE',
                 'players': team2_steamIDs
+            },
+            'cvars': {
+                'get5_web_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/',
+                'get5_web_api_key': 'ABC'
             }
         }
 
@@ -204,9 +209,12 @@ class CSGO(commands.Cog):
         await asyncio.sleep(0.3)
         valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
         await self.connect(ctx)
-        await asyncio.sleep(10)
+        await asyncio.sleep(5)
         valve.rcon.execute(bot.server_address, bot.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
+
+        self.bot.web_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
+                                        players=team1+team2)
 
     @pug.error
     async def pug_error(self, ctx, error):
@@ -242,7 +250,8 @@ class CSGO(commands.Cog):
         with valve.source.a2s.ServerQuerier(bot.server_address, timeout=20) as server:
             info = server.info()
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
-        embed.set_thumbnail(url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
+        embed.set_thumbnail(
+            url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
         embed.add_field(name='Quick Connect',
                         value=f'steam://connect/{bot.server_address[0]}:{bot.server_address[1]}/{bot.server_password}',
                         inline=False)
