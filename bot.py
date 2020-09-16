@@ -44,6 +44,8 @@ async def on_ready():
     if bot.user.id == 745000319942918303:
         bot.dev = True
 
+    bot.version = __version__
+
     bot.web_server = WebServer(bot=bot)
     await bot.web_server.http_start()
     print(f'{bot.user} connected.')

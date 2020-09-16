@@ -103,7 +103,7 @@ class Setup(commands.Cog):
         traceback.print_exc(error)
 
     @commands.command(hidden=True)
-    # @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount: int):
         await ctx.channel.purge(limit=amount)
 
@@ -113,6 +113,12 @@ class Setup(commands.Cog):
             await ctx.send('Please specify an amount of messages to delete')
         traceback.print_exc(error)
 
+    @commands.command(aliases=['version'], help='This command gets the bot information and version')
+    async def about(self, ctx):
+        embed = discord.Embed(color=0xff0000)
+        embed.add_field(name=f'Discord 10 Man Bot V{self.bot.version}',
+                        value=f'Built by <@125033487051915264> & <@282670937738969088>', inline=False)
+        await ctx.send(embed=embed)
 
 def setup(client):
     client.add_cog(Setup(client))
