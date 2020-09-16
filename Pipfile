@@ -12,6 +12,7 @@ autopep8 = "*"
 steam = "*"
 python-valve = "*"
 pillow = "*"
+aiohttp = "*"
 
 [requires]
 python_version = "3.8"
