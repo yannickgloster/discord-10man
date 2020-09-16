@@ -13,6 +13,9 @@ steam = "*"
 python-valve = "*"
 pillow = "*"
 aiohttp = "*"
+cchardet = "*"
+aiodns = "*"
+brotlipy = "*"
 
 [requires]
 python_version = "3.8"
