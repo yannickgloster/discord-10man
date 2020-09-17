@@ -148,7 +148,7 @@ class CSGO(commands.Cog):
 
             player_veto_count += 1
 
-        message_text = 'Game Loading'
+        message_text = 'Map Veto Loading'
         players_text = 'None'
         embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                        team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
@@ -198,8 +198,7 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_web_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/',
-                'get5_web_api_key': 'ABC'
+                'get5_event_api_url': f'http://83.197.169.148:{self.bot.web_server.port}/'
             }
         }
 
