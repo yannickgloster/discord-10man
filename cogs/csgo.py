@@ -160,7 +160,7 @@ class CSGO(commands.Cog):
         team1_channel = await ctx.author.voice.channel.category.create_voice_channel(
             name=f'team_{team1_captain.display_name}', user_limit=7)
         team2_channel = await ctx.author.voice.channel.category.create_voice_channel(
-            name=f'team_{team1_captain.display_name}', user_limit=7)
+            name=f'team_{team2_captain.display_name}', user_limit=7)
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
