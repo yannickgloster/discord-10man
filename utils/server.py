@@ -1,6 +1,7 @@
 from aiohttp import web
 import socket
-from json import JSONDecodeError
+from json import JSONDecodeError, loads
+import discord
 
 
 def _http_error_handler(error=False) -> web.Response:
@@ -28,6 +29,8 @@ class WebServer:
         self.ctx = None
         self.channels = None
         self.players = None
+        self.score_message = None
+        self.team_names = None
         self.IP = socket.gethostbyname(socket.gethostname())
         self.port = 3000
 
@@ -47,19 +50,32 @@ class WebServer:
 
             return _http_error_handler("request-type")
 
-        if request.path == '/match/0/finish':
+        try:
+            request_json = await request.json()
+        except JSONDecodeError:
+            return self._http_error_handler("json-body")
+
+        # TODO: Create Checks for the JSON
+
+        get5_event = loads(request_json)
+
+        if get5_event['event'] == 'series_start':
+            self.team_names = [get5_event['params']['team1_name'], get5_event['params']['team2_name']]
+
+        elif get5_event['event'] == 'round_end':
+            score_embed = discord.Embed()
+            score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
+                                  value=f'{self.team_names[0]}', inline=True)
+            score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
+                                  value=f'{self.team_names[1]}', inline=True)
+            await self.score_message.edit(embed=score_embed)
+
+        elif get5_event['event'] == 'series_end':
+            await self.score_message.edit('Game Over')
             for player in self.players:
                 await player.move_to(channel=self.channels[0], reason=f'Game Over')
             await self.channels[1].delete(reason='Game Over')
             await self.channels[2].delete(reason='Game Over')
-
-            text_response = await request.text()
-            text_split = text_response.split('&')
-            for s in text_split:
-                s_split = s.split('=')
-                if s_split[0] == 'winner':
-                    await self.ctx.send(f'{s_split[1]} wins!')
-                    break
 
         return _http_error_handler()
 
@@ -75,7 +91,8 @@ class WebServer:
         await site.start()
         print(f'Webserver Started on {self.IP}:{self.port}')
 
-    def get_context(self, ctx, channels:list, players:list):
+    def get_context(self, ctx, channels: list, players: list, score_message):
         self.ctx = ctx
         self.channels = channels
         self.players = players
+        self.score_message = score_message

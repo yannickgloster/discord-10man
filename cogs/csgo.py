@@ -148,7 +148,7 @@ class CSGO(commands.Cog):
 
             player_veto_count += 1
 
-        message_text = 'Game Loading'
+        message_text = 'Map Veto Loading'
         players_text = 'None'
         embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                        team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
@@ -158,9 +158,9 @@ class CSGO(commands.Cog):
         team2_steamIDs = []
 
         team1_channel = await ctx.author.voice.channel.category.create_voice_channel(
-            name=f'{team1_captain.display_name}\'s Team', user_limit=7)
+            name=f'team_{team1_captain.display_name}', user_limit=7)
         team2_channel = await ctx.author.voice.channel.category.create_voice_channel(
-            name=f'{team2_captain.display_name}\'s Team', user_limit=7)
+            name=f'team_{team2_captain.display_name}', user_limit=7)
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
@@ -186,20 +186,19 @@ class CSGO(commands.Cog):
             'players_per_team': len(team2),
             'min_players_to_ready': 1,
             'team1': {
-                'name': f'team {team1_captain.display_name}',
+                'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
                 'flag': 'IE',
                 'players': team1_steamIDs
             },
             'team2': {
-                'name': f'team {team2_captain.display_name}',
+                'name': f'team_{team2_captain.display_name}',
                 'tag': 'team2',
                 'flag': 'IE',
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_web_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/',
-                'get5_web_api_key': 'ABC'
+                'get5_event_api_url': f'http://{self.bot.web_serve.IP}:{self.bot.web_server.port}/'
             }
         }
 
@@ -215,8 +214,13 @@ class CSGO(commands.Cog):
         valve.rcon.execute(bot.server_address, bot.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
+        score_embed = discord.Embed()
+        score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
+        score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
+        score_message = await ctx.send('Match in Progress', embed=score_embed)
+
         self.bot.web_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
-                                        players=team1+team2)
+                                        players=team1+team2, score_message=score_message)
 
     @pug.error
     async def pug_error(self, ctx, error):
