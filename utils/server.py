@@ -53,7 +53,7 @@ class WebServer:
         try:
             get5_event = await request.json()
         except JSONDecodeError:
-            return self._http_error_handler("json-body")
+            return _http_error_handler("json-body")
 
         # TODO: Create Checks for the JSON
 
