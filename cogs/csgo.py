@@ -210,7 +210,7 @@ class CSGO(commands.Cog):
         await asyncio.sleep(0.3)
         valve.rcon.execute(bot.server_address, bot.RCON_password, 'exec triggers/get5')
         await self.connect(ctx)
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
         valve.rcon.execute(bot.server_address, bot.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
