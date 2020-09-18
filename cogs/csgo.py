@@ -160,7 +160,7 @@ class CSGO(commands.Cog):
         embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                        team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
         await message.edit(content=message_text, embed=embed)
-        message.clear_reactions()
+        await message.clear_reactions()
 
         team1_steamIDs = []
         team2_steamIDs = []
