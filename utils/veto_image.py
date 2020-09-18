@@ -56,6 +56,37 @@ class VetoImage:
             self._image_extension = '.' + value
         else:
             self._image_extension = value
+    
+    @staticmethod
+    def resize(image, percentage, output_fp=None):
+        '''Resizes the image based on the percentage provided
+
+        The aspect ratio will be preserved
+
+        Attributes
+        -----------
+        image: Union[:class:`str`, :class:`PIL.Image`]
+            The filepath of the image or the image object itself
+        percentage: :class:`float`
+            The percentage size of the new image e.g 0.5 will reduce the size
+            of the image by half
+        output_fp: Optional[:class:`str`]
+            If specified the image will be saved at the file path specified
+        '''
+
+        if isinstance(image, str):
+            image = Image.open(image)
+
+        image_width, image_height = image.size
+        new_size = (image_width * percentage,
+                    image_height * percentage)
+        new_size = tuple(map(int, new_size))
+        image = image.resize(new_size)
+
+        if output_fp:
+            image.save(output_fp)
+        
+        return image
 
     def __crop_map_images(self):
         '''Creates the map icon assets by cropping them and placing the
@@ -66,15 +97,11 @@ class VetoImage:
                 self.map_images_fp, image_file_name))
             image_width, image_height = image.size
 
+            percentage = 0.25
             crop_coodinates = (0, image_height / 3, image_width,
                                image_height * 2 / 3)
             map_strip = image.crop(crop_coodinates)
-
-            percentage = 0.25
-            image_width, image_height = map_strip.size
-            new_size = (int(image_width * percentage),
-                        int(image_height * percentage))
-            map_strip = map_strip.resize(new_size)
+            map_strip = VetoImage.resize(map_strip, percentage)
 
             map_strip.save(os.path.join(self.assets_fp, image_file_name))
 

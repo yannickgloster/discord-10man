@@ -336,7 +336,9 @@ class CSGO(commands.Cog):
             chosen_map_file_name = chosen_map + self.veto_image.image_extension
             chosen_map_fp = os.path.join(
                 self.veto_image.map_images_fp, chosen_map_file_name)
-            attachment = discord.File(chosen_map_fp, chosen_map_file_name)
+            percentage = 0.25
+            VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
+            attachment = discord.File(veto_image_fp, chosen_map_file_name)
             image_message = await temp_channel.send(file=attachment)
             chosen_map_image_url = image_message.attachments[0].url
             map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
