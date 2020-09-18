@@ -82,6 +82,8 @@ class CSGO(commands.Cog):
         for emoji in emojis:
             await message.add_reaction(emoji)
 
+        emoji_remove = []
+
         while len(players) > 0:
             message_text = ''
             players_text = ''
@@ -103,6 +105,10 @@ class CSGO(commands.Cog):
             embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                            team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
+            if len(emoji_remove) > 0:
+                for emoji in emoji_remove:
+                    await message.clear_reaction(emoji)
+                emoji_remove = []
 
             selected_players = 0
             seconds = 0
@@ -120,7 +126,7 @@ class CSGO(commands.Cog):
                         if current_team_player_select == 2:
                             team2.append(players[index])
                         emojis_selected.append(reaction.emoji)
-                        await message.clear_reaction(reaction.emoji)
+                        emoji_remove.append(reaction.emoji)
                         del emojis[index]
                         del players[index]
                         selected_players += 1
@@ -148,11 +154,13 @@ class CSGO(commands.Cog):
 
             player_veto_count += 1
 
+
         message_text = 'Map Veto Loading'
         players_text = 'None'
         embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                        team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
         await message.edit(content=message_text, embed=embed)
+        message.clear_reactions()
 
         team1_steamIDs = []
         team2_steamIDs = []
@@ -198,7 +206,7 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://83.197.169.148:{self.bot.web_server.port}/'
             }
         }
 
