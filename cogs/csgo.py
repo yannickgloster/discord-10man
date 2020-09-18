@@ -206,7 +206,7 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://83.197.169.148:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/'
             }
         }
 
