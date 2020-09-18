@@ -336,7 +336,9 @@ class CSGO(commands.Cog):
             chosen_map_file_name = chosen_map + self.veto_image.image_extension
             chosen_map_fp = os.path.join(
                 self.veto_image.map_images_fp, chosen_map_file_name)
-            attachment = discord.File(chosen_map_fp, chosen_map_file_name)
+            percentage = 0.25
+            VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
+            attachment = discord.File(veto_image_fp, chosen_map_file_name)
             image_message = await temp_channel.send(file=attachment)
             chosen_map_image_url = image_message.attachments[0].url
             map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
@@ -375,18 +377,18 @@ class CSGO(commands.Cog):
             self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                                  is_vetoed=is_vetoed, spacing=25)
             embed = await get_embed(current_team_captain, temp_channel)
-            await message.edit(embed=embed)
-            await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
+            await asyncio.gather(message.edit(embed=embed),
+                                 message.clear_reaction(emoji_bank[vetoed_map_index + 1]))
 
             num_maps_left -= 1
 
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
-        await message.clear_reactions()
         chosen_map = map_list[0]
         chosen_map_embed = await get_chosen_map_embed(chosen_map)
-        await message.edit(embed=chosen_map_embed)
-        await temp_channel.delete()
+        await asyncio.gather(message.clear_reactions(),
+                             message.edit(embed=chosen_map_embed),
+                             temp_channel.delete())
 
         return map_list
 
