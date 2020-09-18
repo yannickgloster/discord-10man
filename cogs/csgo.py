@@ -375,18 +375,18 @@ class CSGO(commands.Cog):
             self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                                  is_vetoed=is_vetoed, spacing=25)
             embed = await get_embed(current_team_captain, temp_channel)
-            await message.edit(embed=embed)
-            await message.clear_reaction(emoji_bank[vetoed_map_index + 1])
+            await asyncio.gather(message.edit(embed=embed),
+                                 message.clear_reaction(emoji_bank[vetoed_map_index + 1]))
 
             num_maps_left -= 1
 
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
-        await message.clear_reactions()
         chosen_map = map_list[0]
         chosen_map_embed = await get_chosen_map_embed(chosen_map)
-        await message.edit(embed=chosen_map_embed)
-        await temp_channel.delete()
+        await asyncio.gather(message.clear_reactions(),
+                             message.edit(embed=chosen_map_embed),
+                             temp_channel.delete())
 
         return map_list
 
