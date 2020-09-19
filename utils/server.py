@@ -1,7 +1,9 @@
-from aiohttp import web
 import socket
-from json import JSONDecodeError
 import discord
+
+from aiohttp import web
+from json import JSONDecodeError
+
 
 
 def _http_error_handler(error=False) -> web.Response:

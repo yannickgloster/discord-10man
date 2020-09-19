@@ -1,23 +1,21 @@
 import discord
-from discord.ext import commands
-import sqlite3
 import json
+import sqlite3
+
+from discord.ext import commands
 from utils.server import WebServer
 
-__version__ = '0.5.0'
+__version__ = '0.6.0'
 
 startup_extensions = ["setup", "csgo"]
 
 # TODO: Change prefix to . when syncing
 bot = commands.Bot(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.')
 bot_secret: str
-
-# TODO: Refactor these variables to pass through into the init of the cog instead of importing the file
 server_address: (str, int)
 server_password: str
 RCON_password: str
 
-# Loading JSON config file
 with open('config.json') as config:
     json_data = json.load(config)
     bot_secret = str(json_data['discord_api'])
@@ -40,7 +38,10 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.playing,
                                                                                     state='Waiting', details='Waiting',
                                                                                     name='CSGO Pug'))
-    global server_address, server_password, RCON_password
+    bot.server_address = server_address
+    bot.server_password = server_password
+    bot.RCON_password = RCON_password
+    bot.secret = bot_secret
     bot.dev = bot.user.id == 745000319942918303
 
     bot.version = __version__

@@ -1,11 +1,11 @@
 import discord
-from discord.ext import commands
-import valve.rcon
-from steam.steamid import SteamID, from_url
-import sqlite3
 import json
+import sqlite3
 import traceback
-import bot
+import valve.rcon
+
+from discord.ext import commands
+from steam.steamid import SteamID, from_url
 
 
 class Setup(commands.Cog):
@@ -23,12 +23,12 @@ class Setup(commands.Cog):
         test_connection.authenticate()
         test_connection.close()
 
-        bot.server_address = (str(server_address_in), int(port))
-        bot.server_password = str(password)
-        bot.RCON_password = str(RCON_password_in)
+        self.bot.server_address = (str(server_address_in), int(port))
+        self.bot.server_password = str(password)
+        self.bot.RCON_password = str(RCON_password_in)
 
         config = {
-            'discord_api': bot.bot_secret,
+            'discord_api': self.bot.secret,
             'server_address': server_address_in,
             'server_port': int(port),
             'server_password': password,
@@ -38,7 +38,7 @@ class Setup(commands.Cog):
         with open('./config.json', 'w') as outfile:
             json.dump(config, outfile, ensure_ascii=False, indent=4)
 
-        ctx.send(f'Successfully connected to {bot.server_address}')
+        ctx.send(f'Successfully connected to {self.bot.server_address}')
 
     @setup_server.error
     async def setup_server_error(self, ctx, error):
@@ -78,7 +78,7 @@ class Setup(commands.Cog):
                       brief='Sends a message to the server to test RCON', usage='<message>')
     @commands.has_permissions(administrator=True)
     async def RCON_message(self, ctx, *, message):
-        test = valve.rcon.execute(bot.server_address, bot.RCON_password, f'say {message}')
+        test = valve.rcon.execute(self.bot.server_address, self.bot.RCON_password, f'say {message}')
         print(test)
 
     @RCON_message.error
@@ -90,10 +90,11 @@ class Setup(commands.Cog):
         traceback.print_exc(error)
 
     @commands.command(help='This command unbans everyone on the server. Useful fix',
-                      brief='Unbans everyone from the server')
+                      brief='Unbans everyone from the server', hidden=True)
     @commands.has_permissions(administrator=True)
+
     async def RCON_unban(self, ctx):
-        unban = valve.rcon.execute(bot.server_address, bot.RCON_password, 'removeallids')
+        unban = valve.rcon.execute(self.bot.server_address, self.bot.RCON_password, 'removeallids')
         print(unban)
 
     @RCON_unban.error
