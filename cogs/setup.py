@@ -12,42 +12,6 @@ class Setup(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(
-        help='This command connects the bot to the CSGO server and validates that the connection is valid. It then'
-             ' saves all the information to the config.json file.', brief='Connects the bot to the CSGO server',
-        usage='<server_address> <port> <server_password> <RCON_password>')
-    @commands.has_permissions(administrator=True)
-    async def setup_server(self, ctx, server_address_in, port, password, RCON_password_in):
-        test_connection = valve.rcon.RCON((str(server_address_in), int(port)), RCON_password_in)
-        test_connection.connect()
-        test_connection.authenticate()
-        test_connection.close()
-
-        self.bot.server_address = (str(server_address_in), int(port))
-        self.bot.server_password = str(password)
-        self.bot.RCON_password = str(RCON_password_in)
-
-        config = {
-            'discord_api': self.bot.secret,
-            'server_address': server_address_in,
-            'server_port': int(port),
-            'server_password': password,
-            'RCON_password': RCON_password_in
-        }
-
-        with open('./config.json', 'w') as outfile:
-            json.dump(config, outfile, ensure_ascii=False, indent=4)
-
-        ctx.send(f'Successfully connected to {self.bot.server_address}')
-
-    @setup_server.error
-    async def setup_server_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator can setup the server')
-        if isinstance(error, valve.rcon.RCONAuthenticationError) or isinstance(error, commands.CommandInvokeError):
-            await ctx.send('RCON authentication failed')
-        traceback.print_exc(error)
-
     @commands.command(help='This command connects users steam account to the bot.',
                       brief='Connect your SteamID to the bot', usage='<SteamID or CommunityURL>')
     async def link(self, ctx, steamID_input):
@@ -78,7 +42,8 @@ class Setup(commands.Cog):
                       brief='Sends a message to the server to test RCON', usage='<message>')
     @commands.has_permissions(administrator=True)
     async def RCON_message(self, ctx, *, message):
-        test = valve.rcon.execute(self.bot.server_address, self.bot.RCON_password, f'say {message}')
+        test = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+                           self.bot.servers[0]["RCON_password"], f'say {message}')
         print(test)
 
     @RCON_message.error
@@ -92,9 +57,9 @@ class Setup(commands.Cog):
     @commands.command(help='This command unbans everyone on the server. Useful fix',
                       brief='Unbans everyone from the server', hidden=True)
     @commands.has_permissions(administrator=True)
-
     async def RCON_unban(self, ctx):
-        unban = valve.rcon.execute(self.bot.server_address, self.bot.RCON_password, 'removeallids')
+        unban = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+                           self.bot.servers[0]["RCON_password"], 'removeallids')
         print(unban)
 
     @RCON_unban.error
