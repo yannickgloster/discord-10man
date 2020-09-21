@@ -215,10 +215,12 @@ class CSGO(commands.Cog):
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
         await asyncio.sleep(0.3)
-        valve.rcon.execute(self.bot.server_address, self.bot.RCON_password, 'exec triggers/get5')
+        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
+                           self.bot.servers[0]["RCON_password"], 'exec triggers/get5')
         await self.connect(ctx)
         await asyncio.sleep(10)
-        valve.rcon.execute(self.bot.server_address, self.bot.RCON_password,
+        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
+                           self.bot.servers[0]["RCON_password"],
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
         score_embed = discord.Embed()
@@ -402,16 +404,16 @@ class CSGO(commands.Cog):
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
     async def connect(self, ctx):
-        with valve.source.a2s.ServerQuerier(self.bot.server_address, timeout=20) as server:
+        with valve.source.a2s.ServerQuerier((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]), timeout=20) as server:
             info = server.info()
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
         embed.set_thumbnail(
             url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
         embed.add_field(name='Quick Connect',
-                        value=f'steam://connect/{self.bot.server_address[0]}:{self.bot.server_address[1]}/{self.bot.server_password}',
+                        value=f'steam://connect/{self.bot.servers[0]["server_address"]}:{self.bot.servers[0]["server_port"]}/{self.bot.servers[0]["server_password"]}',
                         inline=False)
         embed.add_field(name='Console Connect',
-                        value=f'connect {self.bot.server_address[0]}:{self.bot.server_address[1]}; password {self.bot.server_password}',
+                        value=f'connect {self.bot.servers[0]["server_address"]}:{self.bot.servers[0]["server_port"]}; password {self.bot.servers[0]["server_password"]}',
                         inline=False)
         embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
         embed.add_field(name='Map', value=info['map'], inline=True)
