@@ -215,11 +215,11 @@ class CSGO(commands.Cog):
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
         await asyncio.sleep(0.3)
-        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
                            self.bot.servers[0]["RCON_password"], 'exec triggers/get5')
         await self.connect(ctx)
         await asyncio.sleep(10)
-        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
                            self.bot.servers[0]["RCON_password"],
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 

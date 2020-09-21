@@ -42,7 +42,7 @@ class Setup(commands.Cog):
                       brief='Sends a message to the server to test RCON', usage='<message>')
     @commands.has_permissions(administrator=True)
     async def RCON_message(self, ctx, *, message):
-        test = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+        test = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
                            self.bot.servers[0]["RCON_password"], f'say {message}')
         print(test)
 
@@ -58,7 +58,7 @@ class Setup(commands.Cog):
                       brief='Unbans everyone from the server', hidden=True)
     @commands.has_permissions(administrator=True)
     async def RCON_unban(self, ctx):
-        unban = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_password"]),
+        unban = valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
                            self.bot.servers[0]["RCON_password"], 'removeallids')
         print(unban)
 
