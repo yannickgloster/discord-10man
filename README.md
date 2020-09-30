@@ -9,11 +9,15 @@ Discord bot for CS:GO Scrims and Pugs
 #### config.json example:
 ```json
 {
-    "discord_api": "Discord API Bot Secret Key",
-    "server_address": "Server Address/IP",
-    "server_port": 27015,
-    "server_password": "Server Password",
-    "RCON_password": "RCON Password"
+    "discord_token": "123fkdjsh123alksjfhlaskdjafhlkj1hl3kj4hlkjss",
+    "servers": [
+        {
+            "server_address": "csgo.yannickgloster.com",
+            "server_port": 27015,
+            "server_password": "pasword1234",
+            "RCON_password": "1234password"
+        }
+    ]
 }
 ```
 
