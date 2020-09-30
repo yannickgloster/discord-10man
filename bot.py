@@ -1,7 +1,7 @@
 import discord
 import logging
-import sqlite3
 
+from databases import Database
 from discord.ext import commands
 from utils.server import WebServer
 
@@ -21,15 +21,6 @@ class Discord_10man(commands.Bot):
         self.queue_voice_channel = None
         self.queue_text_channel = None
 
-        db = sqlite3.connect('./main.sqlite')
-        cursor = db.cursor()
-        cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS users(
-                        discord_id TEXT UNIQUE,
-                        steam_id TEXT
-                    )''')
-        db.close()
-
         logger = logging.getLogger('discord')
         logger.setLevel(logging.DEBUG)
         handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -40,6 +31,14 @@ class Discord_10man(commands.Bot):
             self.load_extension(f'cogs.{extension}')
 
     async def on_ready(self):
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+        await db.execute('''
+                    CREATE TABLE IF NOT EXISTS users(
+                        discord_id TEXT UNIQUE,
+                        steam_id TEXT
+                    )''')
+
         # TODO: Custom state for waiting for pug or if a pug is already playing
         await self.change_presence(status=discord.Status.idle,
                                    activity=discord.Activity(type=discord.ActivityType.playing,

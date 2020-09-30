@@ -16,6 +16,7 @@ aiohttp = "*"
 cchardet = "*"
 aiodns = "*"
 brotlipy = "*"
+databases = {extras = ["sqlite"], version = "*"}
 
 [requires]
 python_version = "3.8"
