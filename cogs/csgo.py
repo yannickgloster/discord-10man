@@ -197,11 +197,9 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://79.97.192.229:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/'
             }
         }
-
-        # {self.bot.web_server.IP}
 
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
