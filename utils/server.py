@@ -3,6 +3,7 @@ import discord
 
 from aiohttp import web
 from json import JSONDecodeError
+from utils.csgo_server import CSGOServer
 
 
 
@@ -28,14 +29,10 @@ def _http_error_handler(error=False) -> web.Response:
 class WebServer:
     def __init__(self, bot):
         self.bot = bot
-        self.ctx = None
-        self.channels = None
-        self.players = None
-        self.score_message = None
-        self.team_names = None
         self.IP = socket.gethostbyname(socket.gethostname())
         self.port = 3000
         self.site = None
+        self.csgo_servers: [CSGOServer] = []
 
     async def _handler(self, request: web.Request) -> web.Response:
         """
@@ -60,23 +57,36 @@ class WebServer:
 
         # TODO: Create Checks for the JSON
 
-        if get5_event['event'] == 'series_start':
-            self.team_names = [get5_event['params']['team1_name'], get5_event['params']['team2_name']]
+        server = None
+        for csgo_server in self.csgo_servers:
+            if socket.gethostbyname(csgo_server.server_address) == request.remote:
+                server = csgo_server
+                break
 
-        elif get5_event['event'] == 'round_end':
-            score_embed = discord.Embed()
-            score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
-                                  value=f'{self.team_names[0]}', inline=True)
-            score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
-                                  value=f'{self.team_names[1]}', inline=True)
-            await self.score_message.edit(embed=score_embed)
+        if server is not None:
+            if get5_event['event'] == 'series_start':
+                server.set_team_names([get5_event['params']['team1_name'], get5_event['params']['team2_name']])
 
-        elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
-            await self.score_message.edit('Game Over')
-            for player in self.players:
-                await player.move_to(channel=self.channels[0], reason=f'Game Over')
-            await self.channels[1].delete(reason='Game Over')
-            await self.channels[2].delete(reason='Game Over')
+            elif get5_event['event'] == 'round_end':
+                score_embed = discord.Embed()
+                score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
+                                      value=f'{server.team_names[0]}', inline=True)
+                score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
+                                      value=f'{server.team_names[1]}', inline=True)
+                await server.score_message.edit(embed=score_embed)
+
+            elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
+                if get5_event['event'] == 'series_end':
+                    await server.score_message.edit(content='Game Over')
+                elif get5_event['event'] == 'series_cancel':
+                    await server.score_message.edit(content='Game Cancelled by Admin')
+
+                for player in server.players:
+                    await player.move_to(channel=server.channels[0], reason=f'Game Over')
+                await server.channels[1].delete(reason='Game Over')
+                await server.channels[2].delete(reason='Game Over')
+                server.make_available()
+                self.csgo_servers.remove(server)
 
         return _http_error_handler()
 
@@ -104,3 +114,6 @@ class WebServer:
         self.channels = channels
         self.players = players
         self.score_message = score_message
+
+    def add_server(self, csgo_server):
+        self.csgo_servers.append(csgo_server)

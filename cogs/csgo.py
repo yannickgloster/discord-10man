@@ -12,6 +12,7 @@ from datetime import date
 from discord.ext import commands, tasks
 from random import choice
 from random import randint
+from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
 
 # TODO: Allow administrators to update the maplist
@@ -39,10 +40,17 @@ class CSGO(commands.Cog):
     @commands.check(checks.voice_channel)
     @commands.check(checks.ten_players)
     @commands.check(checks.linked_accounts)
+    @commands.check(checks.available_server)
     async def pug(self, ctx):
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
         await db.connect()
+        csgo_server = self.bot.servers[0]
+        for server in self.bot.servers:
+            if server.available:
+                server.available = False
+                csgo_server = server
+                break
         channel_original = ctx.author.voice.channel
         players = ctx.author.voice.channel.members.copy()
         if self.bot.dev:
@@ -189,31 +197,38 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://79.97.192.229:{self.bot.web_server.port}/'
             }
         }
+
+        # {self.bot.web_server.IP}
 
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
+        loading_map_message = await ctx.send('Server is being configured')
         await asyncio.sleep(0.3)
-        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
-                           self.bot.servers[0]["RCON_password"], 'exec triggers/get5')
-        await self.connect(ctx)
+        valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
+                           'exec triggers/get5')
         await asyncio.sleep(10)
-        valve.rcon.execute((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
-                           self.bot.servers[0]["RCON_password"],
+        await loading_map_message.delete()
+        valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
                            f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
+        await asyncio.sleep(5)
+        connect_embed = await self.connect_embed(csgo_server)
+        await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
         score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
         score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
         score_message = await ctx.send('Match in Progress', embed=score_embed)
 
-        self.bot.web_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
-                                        players=team1 + team2, score_message=score_message)
+        csgo_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
+                                players=team1 + team2, score_message=score_message)
+        self.bot.web_server.add_server(csgo_server)
+
         if not self.pug.enabled:
             self.queue_check.start()
 
@@ -423,27 +438,31 @@ class CSGO(commands.Cog):
             self.readied_up = False
             await self.pug(self.bot.queue_text_channel)
         else:
+            # TODO: Kick people who haven't readied up
             await self.bot.queue_text_channel.send('Not everyone readied up')
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
-                      brief='Creates a URL people can connect to')
+                      brief='Creates a URL people can connect to', hidden=True)
     async def connect(self, ctx):
-        with valve.source.a2s.ServerQuerier((self.bot.servers[0]["server_address"], self.bot.servers[0]["server_port"]),
-                                            timeout=20) as server:
+        embed = await self.connect_embed(self.bot.servers[0])
+        await ctx.send(embed=embed)
+
+    async def connect_embed(self, csgo_server: CSGOServer) -> discord.Embed:
+        with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port), timeout=20) as server:
             info = server.info()
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
         embed.set_thumbnail(
             url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
         embed.add_field(name='Quick Connect',
-                        value=f'steam://connect/{self.bot.servers[0]["server_address"]}:{self.bot.servers[0]["server_port"]}/{self.bot.servers[0]["server_password"]}',
+                        value=f'steam://connect/{csgo_server.server_address}:{csgo_server.server_port}/{csgo_server.server_password}',
                         inline=False)
         embed.add_field(name='Console Connect',
-                        value=f'connect {self.bot.servers[0]["server_address"]}:{self.bot.servers[0]["server_port"]}; password {self.bot.servers[0]["server_password"]}',
+                        value=f'connect {csgo_server.server_address}:{csgo_server.server_port}; password {csgo_server.server_password}',
                         inline=False)
         embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
         embed.add_field(name='Map', value=info['map'], inline=True)
-        await ctx.send(embed=embed)
+        return embed
 
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
                                              'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
