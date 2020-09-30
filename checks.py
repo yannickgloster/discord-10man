@@ -1,6 +1,7 @@
 from databases import Database
 from discord.ext import commands
 
+
 async def voice_channel(ctx):
     if ctx.author.voice is None:
         raise commands.CommandError(message='You must be in a voice channel.')
@@ -28,4 +29,15 @@ async def linked_accounts(ctx):
                 error_message += f'<@{member.id}> '
             error_message += f'must connect their steam account with the command ```{ctx.bot.command_prefix}link <Steam Profile URL>```'
             raise commands.CommandError(message=error_message)
+    return True
+
+
+async def available_server(ctx):
+    available: bool = False
+    for server in ctx.bot.servers:
+        if server.available:
+            available = True
+            break
+    if not available:
+        raise commands.CommandError(message='There are no servers available')
     return True

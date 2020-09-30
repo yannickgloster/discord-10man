@@ -4,8 +4,9 @@ import logging
 from databases import Database
 from discord.ext import commands
 from utils.server import WebServer
+from utils.csgo_server import CSGOServer
 
-__version__ = '0.9.0'
+__version__ = '0.10.0'
 
 
 class Discord_10man(commands.Bot):
@@ -14,10 +15,13 @@ class Discord_10man(commands.Bot):
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False))
         self.token = config['discord_token']
-        self.servers = config['servers']
+        self.servers: [CSGOServer] = []
+        for i, server in enumerate(config['servers']):
+            self.servers.append(CSGOServer(i, server['server_address'], server['server_port'], server['server_password'], server['RCON_password']))
         self.web_server = WebServer(bot=self)
         self.dev = False
         self.version = __version__
+        # TODO: Change to just CTX
         self.queue_voice_channel = None
         self.queue_text_channel = None
 
