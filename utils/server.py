@@ -35,6 +35,7 @@ class WebServer:
         self.team_names = None
         self.IP = socket.gethostbyname(socket.gethostname())
         self.port = 3000
+        self.site = None
 
     async def _handler(self, request: web.Request) -> web.Response:
         """
@@ -70,7 +71,7 @@ class WebServer:
                                   value=f'{self.team_names[1]}', inline=True)
             await self.score_message.edit(embed=score_embed)
 
-        elif get5_event['event'] == 'series_end':
+        elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
             await self.score_message.edit('Game Over')
             for player in self.players:
                 await player.move_to(channel=self.channels[0], reason=f'Game Over')
@@ -87,9 +88,16 @@ class WebServer:
         server = web.Server(self._handler)
         runner = web.ServerRunner(server)
         await runner.setup()
-        site = web.TCPSite(runner, self.IP, self.port)
-        await site.start()
+        self.site = web.TCPSite(runner, self.IP, self.port)
+        await self.site.start()
         print(f'Webserver Started on {self.IP}:{self.port}')
+
+    async def http_stop(self) -> None:
+        """
+        Used to stop the webserver inside the same context as the bot.
+        """
+
+        await self.site.stop()
 
     def get_context(self, ctx, channels: list, players: list, score_message):
         self.ctx = ctx
