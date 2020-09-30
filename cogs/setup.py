@@ -1,9 +1,10 @@
 import checks
 import discord
-import sqlite3
+import json
 import traceback
 import valve.rcon
 
+from databases import Database
 from discord.ext import commands
 from steam.steamid import SteamID, from_url
 
@@ -22,14 +23,12 @@ class Setup(commands.Cog):
                 steamID = from_url(f'https://steamcommunity.com/id/{steamID_input}/', http_timeout=15)
                 if steamID is None:
                     raise commands.UserInputError(message='Please enter a valid SteamID or community url.')
-        db = sqlite3.connect('./main.sqlite')
-        cursor = db.cursor()
-        cursor.execute('''
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+        await db.execute('''
                         REPLACE INTO users (discord_id, steam_id)
-                        VALUES( ?, ? )
-                        ''', (str(ctx.author), str(steamID.as_steam2_zero),))
-        db.commit()
-        cursor.close()
+                        VALUES( :discord_id, :steam_id )
+                        ''', {"discord_id": str(ctx.author), "steam_id": str(steamID.as_steam2_zero)})
         await ctx.send(f'Connected {steamID.community_url}')
 
     @link.error

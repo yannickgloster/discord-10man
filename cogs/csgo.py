@@ -3,11 +3,11 @@ import checks
 import discord
 import json
 import os
-import sqlite3
 import traceback
 import valve.rcon
 import valve.source.a2s
 
+from databases import Database
 from datetime import date
 from discord.ext import commands, tasks
 from random import choice
@@ -41,8 +41,8 @@ class CSGO(commands.Cog):
     @commands.check(checks.linked_accounts)
     async def pug(self, ctx):
         # TODO: Refactor this mess
-        db = sqlite3.connect('./main.sqlite')
-        cursor = db.cursor()
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
         channel_original = ctx.author.voice.channel
         players = ctx.author.voice.channel.members.copy()
         if self.bot.dev:
@@ -157,14 +157,12 @@ class CSGO(commands.Cog):
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
-            cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
-            data = cursor.fetchone()
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player)})
             team1_steamIDs.append(data[0])
 
         for player in team2:
             await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
-            cursor.execute('SELECT steam_id FROM users WHERE discord_id = ?', (str(player),))
-            data = cursor.fetchone()
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player)})
             team2_steamIDs.append(data[0])
 
         map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -216,7 +214,6 @@ class CSGO(commands.Cog):
 
         self.bot.web_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
                                         players=team1 + team2, score_message=score_message)
-        db.close()
         if not self.pug.enabled:
             self.queue_check.start()
 

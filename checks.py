@@ -1,6 +1,5 @@
+from databases import Database
 from discord.ext import commands
-import sqlite3
-
 
 async def voice_channel(ctx):
     if ctx.author.voice is None:
@@ -16,15 +15,13 @@ async def ten_players(ctx):
 
 async def linked_accounts(ctx):
     if ctx.author.voice is not None:
-        db = sqlite3.connect('./main.sqlite')
-        cursor = db.cursor()
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
         not_connected_members = []
         for member in ctx.author.voice.channel.members:
-            cursor.execute('SELECT 1 FROM users WHERE discord_id = ?', (str(member),))
-            data = cursor.fetchone()
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :member', {"member": str(member)})
             if data is None:
                 not_connected_members.append(member)
-        db.close()
         if len(not_connected_members) > 0:
             error_message = ''
             for member in not_connected_members:
