@@ -58,8 +58,8 @@ class Discord_10man(commands.Bot):
         self.unload_extension(f'cogs.{extension}')
 
     async def close(self):
+        await self.web_server.http_stop()
         await super().close()
-        # TODO: Close Webserver
 
     def run(self):
         super().run(self.token, reconnect=True)
