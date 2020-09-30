@@ -96,7 +96,7 @@ class WebServer:
         """
         Used to stop the webserver inside the same context as the bot.
         """
-        
+
         await self.site.stop()
 
     def get_context(self, ctx, channels: list, players: list, score_message):

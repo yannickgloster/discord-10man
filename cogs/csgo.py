@@ -427,6 +427,7 @@ class CSGO(commands.Cog):
             await self.pug(self.bot.queue_text_channel)
         else:
             await self.bot.queue_text_channel.send('Not everyone readied up')
+            self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to')
