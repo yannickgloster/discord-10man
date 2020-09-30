@@ -70,7 +70,7 @@ class WebServer:
                                   value=f'{self.team_names[1]}', inline=True)
             await self.score_message.edit(embed=score_embed)
 
-        elif get5_event['event'] == 'series_end':
+        elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
             await self.score_message.edit('Game Over')
             for player in self.players:
                 await player.move_to(channel=self.channels[0], reason=f'Game Over')
