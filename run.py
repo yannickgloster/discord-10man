@@ -1,7 +1,7 @@
 import bot
 import json
 
-startup_extensions = ['setup', 'csgo']
+startup_extensions = ['utils', 'setup', 'csgo']
 
 config_file = open('config.json')
 config = json.load(config_file)
