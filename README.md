@@ -25,8 +25,7 @@ Perms Integer: 17300560
 
 Using:
 - [get5 (CSGO Server Plugin)](https://github.com/splewis/get5)
-- [discord.py 1.4.1](https://pypi.org/project/discord.py/)
-- [discord.py[voice] 1.4.1](https://pypi.org/project/discord.py/)
+- [discord.py 1.5.0](https://pypi.org/project/discord.py/)
 - [python.valve 0.2.1](https://pypi.org/project/python-valve/)
 - [steam 1.0.2](https://steam.readthedocs.io/en/stable/intro.html#)
 - [aiohttp[speedups]](https://docs.aiohttp.org/en/stable/index.html#aiohttp-installation)
