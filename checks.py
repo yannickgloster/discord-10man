@@ -2,19 +2,19 @@ from databases import Database
 from discord.ext import commands
 
 
-async def voice_channel(ctx):
+async def voice_channel(ctx: commands.Context):
     if ctx.author.voice is None:
         raise commands.CommandError(message='You must be in a voice channel.')
     return True
 
 
-async def ten_players(ctx):
+async def ten_players(ctx: commands.Context):
     if ctx.author.voice is not None and (len(ctx.author.voice.channel.members) < 10 and not ctx.bot.dev):
         raise commands.CommandError(message='There must be 10 members connected to the voice channel')
     return True
 
 
-async def linked_accounts(ctx):
+async def linked_accounts(ctx: commands.Context):
     if ctx.author.voice is not None:
         db = Database('sqlite:///main.sqlite')
         await db.connect()
@@ -32,7 +32,7 @@ async def linked_accounts(ctx):
     return True
 
 
-async def available_server(ctx):
+async def available_server(ctx: commands.Context):
     available: bool = False
     for server in ctx.bot.servers:
         if server.available:
