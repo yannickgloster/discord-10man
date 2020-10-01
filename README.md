@@ -1,8 +1,6 @@
 # discord-10man
 
-[//]: # (https://forthebadge.com/)
-
-[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/gluten-free.svg)](https://forthebadge.com)
+![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/yannickgloster/discord-10man?style=for-the-badge) ![GitHub](https://img.shields.io/github/license/yannickgloster/discord-10man?style=for-the-badge)
 
 Discord bot for CS:GO Scrims and Pugs
 
