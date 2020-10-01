@@ -6,6 +6,7 @@ from discord.ext import commands
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
+
 __version__ = '0.10.0'
 
 
@@ -14,6 +15,8 @@ class Discord_10man(commands.Bot):
         # TODO: Change prefix to . when syncing
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False))
+        self.intents.members = True
+        self.intents.presences = False
         self.token = config['discord_token']
         self.servers: [CSGOServer] = []
         for i, server in enumerate(config['servers']):
