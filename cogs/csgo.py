@@ -492,7 +492,7 @@ class CSGO(commands.Cog):
                 await ctx.send(embed=score_embed)
 
     @matches.error
-    async def pug_error(self, ctx: commands.Context, error):
+    async def matches_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
