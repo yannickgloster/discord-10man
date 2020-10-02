@@ -18,6 +18,7 @@ class CSGOServer:
         self.players: List[discord.Member] = None
         self.score_message: discord.Message = None
         self.team_names: List[str] = None
+        self.team_scores: List[int] = [0, 0]
 
     def get_context(self, ctx: Context, channels: List[discord.VoiceChannel], players: List[discord.Member],
                     score_message: discord.Message):
@@ -29,6 +30,9 @@ class CSGOServer:
     def set_team_names(self, team_names: List[str]):
         self.team_names = team_names
 
+    def update_team_scores(self, team_scores: List[int]):
+        self.team_scores = team_scores
+
     def make_available(self):
         self.available: bool = True
         self.ctx: Context = None
@@ -36,3 +40,4 @@ class CSGOServer:
         self.players: List[discord.Member] = None
         self.score_message: discord.Message = None
         self.team_names: List[str] = None
+        self.team_scores: List[int] = [0, 0]

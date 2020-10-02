@@ -449,7 +449,8 @@ class CSGO(commands.Cog):
         await ctx.send(embed=embed)
 
     async def connect_embed(self, csgo_server: CSGOServer) -> discord.Embed:
-        with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port), timeout=20) as server:
+        with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port),
+                                            timeout=20) as server:
             info = server.info()
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
         embed.set_thumbnail(
@@ -475,6 +476,26 @@ class CSGO(commands.Cog):
             current_map_pool = reserve_map_pool.copy()
         else:
             current_map_pool = args.split().copy()
+
+    @commands.command(aliases=['live', 'live_matches'], help='This command shows the current live matches.',
+                      brief='Shows the current live matches')
+    @commands.check(checks.active_game)
+    async def matches(self, ctx: commands.Context):
+        for server in self.bot.servers:
+            if not server.available:
+                score_embed = discord.Embed(color=0x00ff00)
+                score_embed.add_field(name=f'{server.team_scores[0]}',
+                                      value=f'{server.team_names[0]}', inline=True)
+                score_embed.add_field(name=f'{server.team_scores[1]}',
+                                      value=f'{server.team_names[1]}', inline=True)
+                score_embed.set_footer(text="🟢 Live")
+                await ctx.send(embed=score_embed)
+
+    @matches.error
+    async def matches_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+        traceback.print_exc()
 
 
 def setup(client):

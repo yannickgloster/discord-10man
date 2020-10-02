@@ -70,6 +70,7 @@ class WebServer:
                 server.set_team_names([get5_event['params']['team1_name'], get5_event['params']['team2_name']])
 
             elif get5_event['event'] == 'round_end':
+                server.update_team_scores([get5_event["params"]["team1_score"], get5_event["params"]["team2_score"]])
                 score_embed = discord.Embed()
                 score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
                                       value=f'{server.team_names[0]}', inline=True)
