@@ -3,30 +3,31 @@ import logging
 
 from databases import Database
 from discord.ext import commands
+from typing import List
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
 
 __version__ = '0.10.0'
+__dev__ = 745000319942918303
 
 
 class Discord_10man(commands.Bot):
-    def __init__(self, config: dict, startup_extensions: [str]):
+    def __init__(self, config: dict, startup_extensions: List[str]):
         # TODO: Change prefix to . when syncing
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False))
         self.intents.members = True
         self.intents.presences = False
-        self.token = config['discord_token']
-        self.servers: [CSGOServer] = []
+        self.token: str = config['discord_token']
+        self.servers: List[CSGOServer] = []
         for i, server in enumerate(config['servers']):
             self.servers.append(CSGOServer(i, server['server_address'], server['server_port'], server['server_password'], server['RCON_password']))
         self.web_server = WebServer(bot=self)
-        self.dev = False
-        self.version = __version__
-        # TODO: Change to just CTX
-        self.queue_voice_channel = None
-        self.queue_text_channel = None
+        self.dev: bool = False
+        self.version:str = __version__
+        self.queue_ctx: commands.Context = None
+        self.queue_voice_channel: discord.VoiceChannel = None
 
         logger = logging.getLogger('discord')
         logger.setLevel(logging.DEBUG)
@@ -52,15 +53,15 @@ class Discord_10man(commands.Bot):
                                                              state='Waiting', details='Waiting',
                                                              name='CSGO Pug'))
 
-        self.dev = self.user.id == 745000319942918303
+        self.dev = self.user.id == __dev__
 
         await self.web_server.http_start()
         print(f'{self.user} connected.')
 
-    async def load(self, ctx, extension):
+    async def load(self, extension: str):
         self.load_extension(f'cogs.{extension}')
 
-    async def unload(self, ctx, extension):
+    async def unload(self, extension: str):
         self.unload_extension(f'cogs.{extension}')
 
     async def close(self):

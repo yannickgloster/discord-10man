@@ -7,11 +7,13 @@ import traceback
 import valve.rcon
 import valve.source.a2s
 
+from bot import Discord_10man
 from databases import Database
 from datetime import date
 from discord.ext import commands, tasks
 from random import choice
 from random import randint
+from typing import List
 from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
 
@@ -27,10 +29,10 @@ player_veto = [1, 2, 2, 2, 1, 1, 1]
 
 
 class CSGO(commands.Cog):
-    def __init__(self, bot, veto_image):
-        self.bot = bot
+    def __init__(self, bot: Discord_10man, veto_image):
+        self.bot: Discord_10man = bot
         self.veto_image = veto_image
-        self.readied_up = False
+        self.readied_up: bool = False
 
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
@@ -41,7 +43,7 @@ class CSGO(commands.Cog):
     @commands.check(checks.ten_players)
     @commands.check(checks.linked_accounts)
     @commands.check(checks.available_server)
-    async def pug(self, ctx):
+    async def pug(self, ctx: commands.Context):
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
         await db.connect()
@@ -231,9 +233,9 @@ class CSGO(commands.Cog):
             self.queue_check.start()
 
     @pug.error
-    async def pug_error(self, ctx, error):
+    async def pug_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandError):
-            await ctx.send(error)
+            await ctx.send(str(error))
         traceback.print_exc()
 
     def player_veto_embed(self, message_text, players_text, team1, team1_captain, team2, team2_captain):
@@ -256,7 +258,7 @@ class CSGO(commands.Cog):
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
         return embed
 
-    async def map_veto(self, ctx, team1_captain, team2_captain):
+    async def map_veto(self, ctx: commands.Context, team1_captain, team2_captain):
         '''Returns :class:`list` of :class:`str` which is the remaining map
         after the veto
 
@@ -403,14 +405,14 @@ class CSGO(commands.Cog):
         if len(self.bot.queue_voice_channel.members) >= 10:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
-            ready_up_message = await self.bot.queue_text_channel.send(embed=embed)
+            ready_up_message = await self.bot.queue_ctx.send(embed=embed)
             await ready_up_message.add_reaction('✅')
             self.ready_up.start(message=ready_up_message, members=self.bot.queue_voice_channel.members)
             self.queue_check.stop()
 
     @tasks.loop(seconds=1.0, count=60)
-    async def ready_up(self, message, members):
-        message = await self.bot.queue_text_channel.fetch_message(message.id)
+    async def ready_up(self, message: discord.Message, members: List[discord.Member]):
+        message = await self.bot.queue_ctx.fetch_message(message.id)
 
         # TODO: Add check for only the first 10 users
         check_emoji = None
@@ -434,15 +436,15 @@ class CSGO(commands.Cog):
     async def ready_up_cancel(self):
         if self.readied_up:
             self.readied_up = False
-            await self.pug(self.bot.queue_text_channel)
+            await self.pug(self.bot.queue_ctx)
         else:
             # TODO: Kick people who haven't readied up
-            await self.bot.queue_text_channel.send('Not everyone readied up')
+            await self.bot.queue_ctx.send('Not everyone readied up')
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to', hidden=True)
-    async def connect(self, ctx):
+    async def connect(self, ctx: commands.Context):
         embed = await self.connect_embed(self.bot.servers[0])
         await ctx.send(embed=embed)
 
@@ -465,7 +467,7 @@ class CSGO(commands.Cog):
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
                                              'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
                       brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
-    async def map_pool(self, ctx, *, args):
+    async def map_pool(self, ctx: commands.Context, *, args):
         global current_map_pool
         if args == 'active':
             current_map_pool = active_map_pool.copy()
