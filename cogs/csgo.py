@@ -472,6 +472,7 @@ class CSGO(commands.Cog):
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
                                              'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
                       brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
+    @commands.has_permissions(administrator=True)
     async def map_pool(self, ctx: commands.Context, *, args):
         global current_map_pool
         if args == 'active':
