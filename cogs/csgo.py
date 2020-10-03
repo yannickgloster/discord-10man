@@ -177,6 +177,10 @@ class CSGO(commands.Cog):
 
         map_list = await self.map_veto(ctx, team1_captain, team2_captain)
 
+        bot_ip = self.bot.web_server.IP
+        if self.bot.bot_IP != "":
+            bot_ip = self.bot.bot_IP
+
         match_config = {
             'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
@@ -199,7 +203,7 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://{self.bot.web_server.IP}:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://{bot_ip}:{self.bot.web_server.port}/'
             }
         }
 
