@@ -8,7 +8,7 @@ from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
 
-__version__ = '0.10.0'
+__version__ = '1.0.1'
 __dev__ = 745000319942918303
 
 
@@ -20,6 +20,7 @@ class Discord_10man(commands.Bot):
         self.intents.members = True
         self.intents.presences = False
         self.token: str = config['discord_token']
+        self.bot_IP: str = config['bot_IP']
         self.servers: List[CSGOServer] = []
         for i, server in enumerate(config['servers']):
             self.servers.append(CSGOServer(i, server['server_address'], server['server_port'], server['server_password'], server['RCON_password']))

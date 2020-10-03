@@ -1,5 +1,6 @@
 {
     "discord_token": "123fkdjsh123alksjfhlaskdjafhlkj1hl3kj4hlkjss",
+    "bot_IP": "",
     "servers": [
         {
             "server_address": "csgo.yannickgloster.com",
