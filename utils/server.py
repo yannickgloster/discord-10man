@@ -84,8 +84,9 @@ class WebServer:
                 elif get5_event['event'] == 'series_cancel':
                     await server.score_message.edit(content='Game Cancelled by Admin')
 
-                for player in server.players:
-                    await player.move_to(channel=server.channels[0], reason=f'Game Over')
+                if self.bot.cogs['CSGO'].pug.enabled:
+                    for player in server.players:
+                        await player.move_to(channel=server.channels[0], reason=f'Game Over')
                 await server.channels[1].delete(reason='Game Over')
                 await server.channels[2].delete(reason='Game Over')
                 server.make_available()
