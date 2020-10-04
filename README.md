@@ -23,7 +23,7 @@ Do you have a csgo server and want to organize PUGs with your friends in discord
 - [Dathost](https://dathost.net/) Support ***COMING SOON***
 
 ### Requirements:
-- A CSGO Server
+- [A CSGO Server](https://duckduckgo.com/?q=csgo+server&atb=v224-1&ia=web)
 - [Get5](https://github.com/splewis/get5)
 - [Get5 Event API](https://github.com/yannickgloster/get5_eventapi)
 
