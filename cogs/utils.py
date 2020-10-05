@@ -19,7 +19,7 @@ class Utils(commands.Cog):
         await msg.edit(content=f'Loaded {extension}')
 
     @load.error
-    async def load_error(self, ctx: commands.Context, error):
+    async def load_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, ImportError) or isinstance(error, commands.ExtensionNotFound) \
                 or isinstance(error, commands.CommandInvokeError):
             await ctx.send(':warning: Extension does not exist.')

@@ -32,7 +32,7 @@ class Setup(commands.Cog):
         await ctx.send(f'Connected {steamID.community_url}')
 
     @link.error
-    async def link_error(self, ctx: commands.Context, error):
+    async def link_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.UserInputError):
             await ctx.send(str(error))
         traceback.print_exc()
@@ -51,7 +51,7 @@ class Setup(commands.Cog):
             f'Pug Command is {"enabled" if not enabled else "disabled"}.')
 
     @setup_queue.error
-    async def setup_queue_error(self, ctx: commands.Context, error):
+    async def setup_queue_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
@@ -66,7 +66,7 @@ class Setup(commands.Cog):
             print(f'Server #{server.id} | {test_message}')
 
     @RCON_message.error
-    async def RCON_message_error(self, ctx: commands.Context, error):
+    async def RCON_message_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send('Only an administrator can send a message using the console')
         if isinstance(error, commands.MissingRequiredArgument):
@@ -82,7 +82,7 @@ class Setup(commands.Cog):
             print(f'Server #{server.id} | {unban}')
 
     @RCON_unban.error
-    async def RCON_unban_error(self, ctx: commands.Context, error):
+    async def RCON_unban_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send('Only an administrator can unban every player')
         traceback.print_exc()

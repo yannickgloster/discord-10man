@@ -3,6 +3,7 @@ import checks
 import discord
 import json
 import os
+import socket
 import traceback
 import valve.rcon
 import valve.source.a2s
@@ -237,7 +238,7 @@ class CSGO(commands.Cog):
             self.queue_check.start()
 
     @pug.error
-    async def pug_error(self, ctx: commands.Context, error):
+    async def pug_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
@@ -447,10 +448,23 @@ class CSGO(commands.Cog):
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
-                      brief='Creates a URL people can connect to', hidden=True)
-    async def connect(self, ctx: commands.Context):
-        embed = await self.connect_embed(self.bot.servers[0])
+                      brief='Creates a URL people can connect to', usage='<ServerID>',  hidden=True)
+    async def connect(self, ctx: commands.Context, server_id: int = 0):
+        print(self.bot.servers[server_id])
+        embed = await self.connect_embed(self.bot.servers[server_id])
         await ctx.send(embed=embed)
+
+    @connect.error
+    async def connect_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error.__cause__, valve.source.NoResponseError) or isinstance(error.__cause__, socket.gaierror):
+            embed = discord.Embed(color=0xff0000)
+            embed.add_field(name="Cannot Connect to Server", value="No Response from Server", inline=False)
+            await ctx.send(embed=embed)
+        elif isinstance(error.__cause__, IndexError):
+            embed = discord.Embed(color=0xff0000)
+            embed.add_field(name="Cannot Connect to Server", value="Not valid Server ID", inline=False)
+            await ctx.send(embed=embed)
+        traceback.print_exc()
 
     async def connect_embed(self, csgo_server: CSGOServer) -> discord.Embed:
         with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port),
@@ -497,7 +511,7 @@ class CSGO(commands.Cog):
                 await ctx.send(embed=score_embed)
 
     @matches.error
-    async def matches_error(self, ctx: commands.Context, error):
+    async def matches_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
