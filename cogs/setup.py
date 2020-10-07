@@ -43,8 +43,9 @@ class Setup(commands.Cog):
     async def setup_queue(self, ctx: commands.Context, enabled: bool = False):
         self.bot.queue_voice_channel = ctx.author.voice.channel
         self.bot.queue_ctx = ctx
-        self.bot.cogs['CSGO'].pug.enabled = not enabled
-        self.bot.cogs['CSGO'].queue_check.start()
+        if enabled:
+            self.bot.cogs['CSGO'].pug.enabled = not enabled
+            self.bot.cogs['CSGO'].queue_check.start()
         await ctx.send(
             f'{self.bot.queue_ctx.author.voice.channel} is the queue channel.\n'
             f'Queue is {"enabled" if enabled else "disabled"}.\n'
