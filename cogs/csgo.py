@@ -55,7 +55,7 @@ class CSGO(commands.Cog):
                 csgo_server = server
                 break
         channel_original = ctx.author.voice.channel
-        players = ctx.author.voice.channel.members.copy()
+        players: List[discord.Member] = ctx.author.voice.channel.members.copy()
         if self.bot.dev:
             players = [ctx.author] * 10
         emojis = emoji_bank.copy()
@@ -407,7 +407,12 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
-        if len(self.bot.queue_voice_channel.members) >= 10:
+        available: bool = False
+        for server in self.bot.servers:
+            if server.available:
+                available = True
+                break
+        if len(self.bot.queue_voice_channel.members) >= 10 & available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
