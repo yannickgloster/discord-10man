@@ -7,7 +7,6 @@ from typing import List
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
-
 __version__ = '1.0.5'
 __dev__ = 745000319942918303
 
@@ -23,10 +22,12 @@ class Discord_10man(commands.Bot):
         self.bot_IP: str = config['bot_IP']
         self.servers: List[CSGOServer] = []
         for i, server in enumerate(config['servers']):
-            self.servers.append(CSGOServer(i, server['server_address'], server['server_port'], server['server_password'], server['RCON_password']))
+            self.servers.append(
+                CSGOServer(i, server['server_address'], server['server_port'], server['server_password'],
+                           server['RCON_password']))
         self.web_server = WebServer(bot=self)
         self.dev: bool = False
-        self.version:str = __version__
+        self.version: str = __version__
         self.queue_ctx: commands.Context = None
         self.queue_voice_channel: discord.VoiceChannel = None
 

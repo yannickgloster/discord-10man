@@ -20,7 +20,7 @@ async def linked_accounts(ctx: commands.Context):
         await db.connect()
         not_connected_members = []
         for member in ctx.author.voice.channel.members:
-            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :member', {"member": str(member)})
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :member', {"member": str(member.id)})
             if data is None:
                 not_connected_members.append(member)
         if len(not_connected_members) > 0:
