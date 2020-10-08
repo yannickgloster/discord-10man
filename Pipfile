@@ -15,7 +15,6 @@ pillow = "*"
 aiohttp = "*"
 cchardet = "*"
 aiodns = "*"
-brotlipy = "*"
 databases = {extras = ["sqlite"], version = "*"}
 
 [requires]
