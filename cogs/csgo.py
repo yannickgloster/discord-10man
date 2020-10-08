@@ -169,12 +169,12 @@ class CSGO(commands.Cog):
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
             team1_steamIDs.append(data[0])
 
         for player in team2:
             await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
             team2_steamIDs.append(data[0])
 
         map_list = await self.map_veto(ctx, team1_captain, team2_captain)
