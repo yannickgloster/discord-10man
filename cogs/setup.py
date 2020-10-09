@@ -47,10 +47,10 @@ class Setup(commands.Cog):
         if enabled:
             self.bot.cogs['CSGO'].pug.enabled = not enabled
             self.bot.cogs['CSGO'].queue_check.start()
-        await ctx.send(
-            f'{self.bot.queue_ctx.author.voice.channel} is the queue channel.\n'
+        embed = discord.Embed(description=f'{self.bot.queue_ctx.author.voice.channel} is the queue channel.\n'
             f'Queue is {"enabled" if enabled else "disabled"}.\n'
             f'Pug Command is {"enabled" if not enabled else "disabled"}.')
+        await ctx.send(embed=embed)
 
     @setup_queue.error
     async def setup_queue_error(self, ctx: commands.Context, error: Exception):
@@ -70,9 +70,11 @@ class Setup(commands.Cog):
     @RCON_message.error
     async def RCON_message_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator can send a message using the console')
+            embed = discord.Embed(description='Only an administrator can send a message using the console')
+            await ctx.send(embed=embed)
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send('Please specify the message')
+            embed = discord.Embed(description='Please specify the message')
+            await ctx.send(embed=embed)
         traceback.print_exc()
 
     @commands.command(help='This command unbans everyone on the server. Useful fix',
@@ -86,7 +88,8 @@ class Setup(commands.Cog):
     @RCON_unban.error
     async def RCON_unban_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send('Only an administrator can unban every player')
+            embed = discord.Embed(description='Only an administrator can unban every player')
+            await ctx.send(embed=embed)
         traceback.print_exc()
 
 

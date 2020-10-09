@@ -76,7 +76,8 @@ class CSGO(commands.Cog):
         current_captain = team1_captain
         player_veto_count = 0
 
-        message = await ctx.send('10 man time\nLoading player selection...')
+        embed = discord.Embed(description='10 man time\nLoading player selection...')
+        message = await ctx.send(embed=embed)
         for emoji in emojis:
             await message.add_reaction(emoji)
 
@@ -213,8 +214,10 @@ class CSGO(commands.Cog):
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
-        await ctx.send('If you are coaching, once you join the server, type .coach')
-        loading_map_message = await ctx.send('Server is being configured')
+        embed = discord.Embed(description='If you are coaching, once you join the server, type .coach')
+        await ctx.send(embed=embed)
+        embed = discord.Embed('Server is being configured')
+        loading_map_message = await ctx.send(embed=embed)
         await asyncio.sleep(0.3)
         valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
                            'exec triggers/get5')
@@ -226,10 +229,10 @@ class CSGO(commands.Cog):
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
         await ctx.send(embed=connect_embed)
-        score_embed = discord.Embed()
+        score_embed = discord.Embed(title='Match in Progress')
         score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
         score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
-        score_message = await ctx.send('Match in Progress', embed=score_embed)
+        score_message = await ctx.send(embed=score_embed)
 
         csgo_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
                                 players=team1 + team2, score_message=score_message)
@@ -450,7 +453,8 @@ class CSGO(commands.Cog):
             await self.pug(self.bot.queue_ctx)
         else:
             # TODO: Kick people who haven't readied up
-            await self.bot.queue_ctx.send('Not everyone readied up')
+            embed = discord.Embed(description='Not everyone readied up')
+            await self.bot.queue_ctx.send(embed=embed)
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
