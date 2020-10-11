@@ -10,14 +10,17 @@ from utils.csgo_server import CSGOServer
 __version__ = '1.0.6'
 __dev__ = 745000319942918303
 
-
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
         # TODO: Change prefix to . when syncing
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
-                         help_command=commands.DefaultHelpCommand(verify_checks=False))
-        self.intents.members = True
-        self.intents.presences = False
+                         help_command=commands.DefaultHelpCommand(verify_checks=False),
+                         intents=discord.Intents(
+                             guilds=True, members=True, bans=True, emojis=True, integrations=True, invites=True,
+                             voice_states=True, presences=False, messages=True, guild_messages=True, dm_messages=True,
+                             reactions=True, guild_reactions=True, dm_reactions=True, typing=True, guild_typing=True,
+                             dm_typing=True
+                         ))
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
         self.servers: List[CSGOServer] = []
