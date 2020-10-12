@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 import checks
 import discord
@@ -169,12 +170,14 @@ class CSGO(commands.Cog):
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
+                                      {"player": str(player.id)})
             team1_steamIDs.append(data[0])
 
         for player in team2:
             await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
+                                      {"player": str(player.id)})
             team2_steamIDs.append(data[0])
 
         map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -212,7 +215,6 @@ class CSGO(commands.Cog):
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
-        match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
         loading_map_message = await ctx.send('Server is being configured')
         await asyncio.sleep(0.3)
@@ -221,7 +223,7 @@ class CSGO(commands.Cog):
         await asyncio.sleep(10)
         await loading_map_message.delete()
         valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
-                           f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
+                           f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
 
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
@@ -282,8 +284,10 @@ class CSGO(commands.Cog):
         '''
 
         veto_image_fp = 'result.png'
+        session = aiohttp.ClientSession()
+        base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
 
-        async def get_embed(current_team_captain, temp_channel):
+        async def get_embed(current_team_captain):
             ''' Returns :class:`discord.Embed` which contains the map veto
             image and the current team captain who has to make a veto
 
@@ -291,16 +295,13 @@ class CSGO(commands.Cog):
             -----------
             current_team_captain: :class:`discord.Member`
                 The current team captain
-            temp_channel: :class:`discord.TextChannel`
-                A temporary channel which will be used to store the veto
-                embed images
             '''
-            attachment = discord.File(veto_image_fp, veto_image_fp)
-            img_message = await temp_channel.send(file=attachment)
-
             embed = discord.Embed(title='__Map veto__',
                                   color=discord.Colour(0x650309))
-            embed.set_image(url=img_message.attachments[0].url)
+            response = await session.get(f'{base_url}/map-veto')
+            path = (await response.json())['path']
+            url = base_url + path
+            embed.set_image(url=url)
             embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
                              icon_url=current_team_captain.avatar_url)
             return embed
@@ -352,9 +353,9 @@ class CSGO(commands.Cog):
                 self.veto_image.map_images_fp, chosen_map_file_name)
             percentage = 0.25
             VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
-            attachment = discord.File(veto_image_fp, chosen_map_file_name)
-            image_message = await temp_channel.send(file=attachment)
-            chosen_map_image_url = image_message.attachments[0].url
+            response = await session.get(f'{base_url}/map-veto')
+            path = (await response.json())['path']
+            chosen_map_image_url = base_url + path
             map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
                                              color=discord.Colour(0x650309))
             map_chosen_embed.set_image(url=chosen_map_image_url)
@@ -367,11 +368,10 @@ class CSGO(commands.Cog):
         current_team_captain = choice((team1_captain, team2_captain))
 
         current_category = ctx.channel.category
-        temp_channel = await ctx.guild.create_text_channel('temp', category=current_category)
 
         self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                              is_vetoed=is_vetoed, spacing=25)
-        embed = await get_embed(current_team_captain, temp_channel)
+        embed = await get_embed(current_team_captain)
         message = await ctx.send(embed=embed)
 
         await add_reactions(message, len(map_list))
@@ -390,7 +390,7 @@ class CSGO(commands.Cog):
 
             self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                                  is_vetoed=is_vetoed, spacing=25)
-            embed = await get_embed(current_team_captain, temp_channel)
+            embed = await get_embed(current_team_captain)
             await asyncio.gather(message.edit(embed=embed),
                                  message.clear_reaction(emoji_bank[vetoed_map_index + 1]))
 
@@ -402,8 +402,7 @@ class CSGO(commands.Cog):
         chosen_map_embed = await get_chosen_map_embed(chosen_map)
         await asyncio.gather(message.clear_reactions(),
                              message.edit(embed=chosen_map_embed),
-                             temp_channel.delete())
-
+                             session.close())
         return map_list
 
     @tasks.loop(seconds=5.0)
@@ -454,7 +453,7 @@ class CSGO(commands.Cog):
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
-                      brief='Creates a URL people can connect to', usage='<ServerID>',  hidden=True)
+                      brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         print(self.bot.servers[server_id])
         embed = await self.connect_embed(self.bot.servers[server_id])

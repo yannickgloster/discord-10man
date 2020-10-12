@@ -13,6 +13,7 @@ __dev__ = 745000319942918303
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
         # TODO: Change prefix to . when syncing
+        # commands.when_mentioned_or('e!')
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False),
                          intents=discord.Intents(
