@@ -1,3 +1,4 @@
+import aiohttp
 import asyncio
 import checks
 import discord
@@ -285,8 +286,10 @@ class CSGO(commands.Cog):
         '''
 
         veto_image_fp = 'result.png'
+        session = aiohttp.ClientSession()
+        base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
 
-        async def get_embed(current_team_captain, temp_channel):
+        async def get_embed(current_team_captain):
             ''' Returns :class:`discord.Embed` which contains the map veto
             image and the current team captain who has to make a veto
 
@@ -294,16 +297,13 @@ class CSGO(commands.Cog):
             -----------
             current_team_captain: :class:`discord.Member`
                 The current team captain
-            temp_channel: :class:`discord.TextChannel`
-                A temporary channel which will be used to store the veto
-                embed images
             '''
-            attachment = discord.File(veto_image_fp, veto_image_fp)
-            img_message = await temp_channel.send(file=attachment)
-
             embed = discord.Embed(title='__Map veto__',
                                   color=discord.Colour(0x650309))
-            embed.set_image(url=img_message.attachments[0].url)
+            response = await session.get(f'{base_url}/map-veto')
+            path = (await response.json())['path']
+            url = base_url + path
+            embed.set_image(url=url)
             embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
                              icon_url=current_team_captain.avatar_url)
             return embed
@@ -355,9 +355,9 @@ class CSGO(commands.Cog):
                 self.veto_image.map_images_fp, chosen_map_file_name)
             percentage = 0.25
             VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
-            attachment = discord.File(veto_image_fp, chosen_map_file_name)
-            image_message = await temp_channel.send(file=attachment)
-            chosen_map_image_url = image_message.attachments[0].url
+            response = await session.get(f'{base_url}/map-veto')
+            path = (await response.json())['path']
+            chosen_map_image_url = base_url + path
             map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
                                              color=discord.Colour(0x650309))
             map_chosen_embed.set_image(url=chosen_map_image_url)
@@ -370,11 +370,10 @@ class CSGO(commands.Cog):
         current_team_captain = choice((team1_captain, team2_captain))
 
         current_category = ctx.channel.category
-        temp_channel = await ctx.guild.create_text_channel('temp', category=current_category)
 
         self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                              is_vetoed=is_vetoed, spacing=25)
-        embed = await get_embed(current_team_captain, temp_channel)
+        embed = await get_embed(current_team_captain)
         message = await ctx.send(embed=embed)
 
         await add_reactions(message, len(map_list))
@@ -393,7 +392,7 @@ class CSGO(commands.Cog):
 
             self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                                  is_vetoed=is_vetoed, spacing=25)
-            embed = await get_embed(current_team_captain, temp_channel)
+            embed = await get_embed(current_team_captain)
             await asyncio.gather(message.edit(embed=embed),
                                  message.clear_reaction(emoji_bank[vetoed_map_index + 1]))
 
@@ -405,8 +404,7 @@ class CSGO(commands.Cog):
         chosen_map_embed = await get_chosen_map_embed(chosen_map)
         await asyncio.gather(message.clear_reactions(),
                              message.edit(embed=chosen_map_embed),
-                             temp_channel.delete())
-
+                             session.close())
         return map_list
 
     @tasks.loop(seconds=5.0)

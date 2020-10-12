@@ -1,5 +1,6 @@
 import discord
 import socket
+import uuid
 
 from aiohttp import web
 from json import JSONDecodeError
@@ -35,6 +36,11 @@ class WebServer:
         self.port: int = 3000
         self.site: web.TCPSite = None
         self.csgo_servers: List[CSGOServer] = []
+        self.map_veto_image_path = self.create_new_veto_filepath()
+
+    def create_new_veto_filepath(self):
+        path = f'/map-veto/{str(uuid.uuid1())}'
+        return path
 
     async def _handler(self, request: web.Request) -> web.Response:
         """
@@ -49,6 +55,10 @@ class WebServer:
             if request.path == '/match':
                 return web.FileResponse('./match_config.json')
             elif request.path == '/map-veto':
+                self.map_veto_image_path = self.create_new_veto_filepath()
+                response = {'path': self.map_veto_image_path}
+                return web.json_response(response)
+            elif request.path == self.map_veto_image_path:
                 return web.FileResponse('./result.png')
         # or "Authorization"
         elif request.method == 'POST':
