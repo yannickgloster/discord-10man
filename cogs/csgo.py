@@ -455,7 +455,6 @@ class CSGO(commands.Cog):
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
-        print(self.bot.servers[server_id])
         embed = await self.connect_embed(self.bot.servers[server_id])
         await ctx.send(embed=embed)
 
@@ -475,6 +474,7 @@ class CSGO(commands.Cog):
         with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port),
                                             timeout=20) as server:
             info = server.info()
+
         embed = discord.Embed(title=info['server_name'], color=0xf4c14e)
         embed.set_thumbnail(
             url="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/730/69f7ebe2735c366c65c0b33dae00e12dc40edbe4.jpg")
@@ -486,6 +486,15 @@ class CSGO(commands.Cog):
                         inline=False)
         embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
         embed.add_field(name='Map', value=info['map'], inline=True)
+        gotv = csgo_server.get_gotv()
+        if gotv is None:
+            embed.add_field(name='GOTV',
+                            value='Not Configured',
+                            inline=False)
+        else:
+            embed.add_field(name='GOTV',
+                            value=f'connect {csgo_server.server_address}:{gotv}',
+                            inline=False)
         return embed
 
     @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
