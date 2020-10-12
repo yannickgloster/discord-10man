@@ -87,6 +87,16 @@ class WebServer:
                                           value=f'{server.team_names[0]}', inline=True)
                     score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
                                           value=f'{server.team_names[1]}', inline=True)
+                    gotv = server.get_gotv()
+                    if gotv is None:
+                        score_embed.add_field(name='GOTV',
+                                              value='Not Configured',
+                                              inline=False)
+                    else:
+                        score_embed.add_field(name='GOTV',
+                                              value=f'connect {server.server_address}:{gotv}',
+                                              inline=False)
+                    score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
 
                 elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
@@ -94,6 +104,10 @@ class WebServer:
                         await server.score_message.edit(content='Game Over')
                     elif get5_event['event'] == 'series_cancel':
                         await server.score_message.edit(content='Game Cancelled by Admin')
+
+                    score_embed: discord.Embed = server.score_message.embeds[0]
+                    score_embed.set_footer(text='🟥 Ended')
+                    await server.score_message.edit(embed=score_embed)
 
                     if self.bot.cogs['CSGO'].pug.enabled:
                         for player in server.players:

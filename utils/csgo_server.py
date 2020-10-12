@@ -1,7 +1,9 @@
 import discord
+import valve.rcon
 
 from discord.ext.commands import Context
 from typing import List
+
 
 class CSGOServer:
     def __init__(self, identifier: int, server_address: str, server_port: int, server_password: str,
@@ -12,6 +14,7 @@ class CSGOServer:
         self.server_password: str = server_password
         self.RCON_password: str = RCON_password
         self.available: bool = True
+        self.gotv: int = None
 
         self.ctx: Context = None
         self.channels: List[discord.VoiceChannel] = None
@@ -41,3 +44,12 @@ class CSGOServer:
         self.score_message: discord.Message = None
         self.team_names: List[str] = None
         self.team_scores: List[int] = [0, 0]
+
+    def get_gotv(self) -> int:
+        if self.gotv is None:
+            status: str = valve.rcon.execute((self.server_address, self.server_port), self.RCON_password, 'status')
+            try:
+                self.gotv = status[status.index('port') + 5:status.index('port') + 10]
+            except ValueError:
+                self.gotv = None
+        return self.gotv
