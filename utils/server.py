@@ -7,7 +7,7 @@ from typing import List
 from utils.csgo_server import CSGOServer
 
 
-def _http_error_handler(error=False) -> web.Response:
+def _http_error_handler(error: str = 'Undefined Error') -> web.Response:
     """
     Used to handle HTTP error response.
     Parameters
@@ -45,52 +45,58 @@ class WebServer:
             AIOHTTP request object.
         """
 
+        if request.method == 'GET':
+            if request.path == '/match':
+                return web.FileResponse('./match_config.json')
+            elif request.path == '/map-veto':
+                return web.FileResponse('./result.png')
         # or "Authorization"
-        if request.method != 'POST':
+        elif request.method == 'POST':
+            try:
+                get5_event = await request.json()
+            except JSONDecodeError:
+                return _http_error_handler('json-body')
+
+            # TODO: Create Checks for the JSON
+
+            server = None
+            for csgo_server in self.csgo_servers:
+                if socket.gethostbyname(csgo_server.server_address) == request.remote:
+                    server = csgo_server
+                    break
+
+            if server is not None:
+                if get5_event['event'] == 'series_start':
+                    server.set_team_names([get5_event['params']['team1_name'], get5_event['params']['team2_name']])
+
+                elif get5_event['event'] == 'round_end':
+                    server.update_team_scores(
+                        [get5_event["params"]["team1_score"], get5_event["params"]["team2_score"]])
+                    score_embed = discord.Embed()
+                    score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
+                                          value=f'{server.team_names[0]}', inline=True)
+                    score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
+                                          value=f'{server.team_names[1]}', inline=True)
+                    await server.score_message.edit(embed=score_embed)
+
+                elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
+                    if get5_event['event'] == 'series_end':
+                        await server.score_message.edit(content='Game Over')
+                    elif get5_event['event'] == 'series_cancel':
+                        await server.score_message.edit(content='Game Cancelled by Admin')
+
+                    if self.bot.cogs['CSGO'].pug.enabled:
+                        for player in server.players:
+                            await player.move_to(channel=server.channels[0], reason=f'Game Over')
+                    await server.channels[1].delete(reason='Game Over')
+                    await server.channels[2].delete(reason='Game Over')
+                    server.make_available()
+                    self.csgo_servers.remove(server)
+        else:
             # Used to decline any requests what doesn't match what our
             # API expects.
 
             return _http_error_handler("request-type")
-
-        try:
-            get5_event = await request.json()
-        except JSONDecodeError:
-            return _http_error_handler("json-body")
-
-        # TODO: Create Checks for the JSON
-
-        server = None
-        for csgo_server in self.csgo_servers:
-            if socket.gethostbyname(csgo_server.server_address) == request.remote:
-                server = csgo_server
-                break
-
-        if server is not None:
-            if get5_event['event'] == 'series_start':
-                server.set_team_names([get5_event['params']['team1_name'], get5_event['params']['team2_name']])
-
-            elif get5_event['event'] == 'round_end':
-                server.update_team_scores([get5_event["params"]["team1_score"], get5_event["params"]["team2_score"]])
-                score_embed = discord.Embed()
-                score_embed.add_field(name=f'{get5_event["params"]["team1_score"]}',
-                                      value=f'{server.team_names[0]}', inline=True)
-                score_embed.add_field(name=f'{get5_event["params"]["team2_score"]}',
-                                      value=f'{server.team_names[1]}', inline=True)
-                await server.score_message.edit(embed=score_embed)
-
-            elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
-                if get5_event['event'] == 'series_end':
-                    await server.score_message.edit(content='Game Over')
-                elif get5_event['event'] == 'series_cancel':
-                    await server.score_message.edit(content='Game Cancelled by Admin')
-
-                if self.bot.cogs['CSGO'].pug.enabled:
-                    for player in server.players:
-                        await player.move_to(channel=server.channels[0], reason=f'Game Over')
-                await server.channels[1].delete(reason='Game Over')
-                await server.channels[2].delete(reason='Game Over')
-                server.make_available()
-                self.csgo_servers.remove(server)
 
         return _http_error_handler()
 
@@ -98,7 +104,6 @@ class WebServer:
         """
         Used to start the webserver inside the same context as the bot.
         """
-
         server = web.Server(self._handler)
         runner = web.ServerRunner(server)
         await runner.setup()

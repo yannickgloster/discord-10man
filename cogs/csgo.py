@@ -169,12 +169,14 @@ class CSGO(commands.Cog):
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
+                                      {"player": str(player.id)})
             team1_steamIDs.append(data[0])
 
         for player in team2:
             await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
-            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player', {"player": str(player.id)})
+            data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
+                                      {"player": str(player.id)})
             team2_steamIDs.append(data[0])
 
         map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -212,7 +214,7 @@ class CSGO(commands.Cog):
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
-        match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
+        # match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
         loading_map_message = await ctx.send('Server is being configured')
         await asyncio.sleep(0.3)
@@ -221,7 +223,8 @@ class CSGO(commands.Cog):
         await asyncio.sleep(10)
         await loading_map_message.delete()
         valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
-                           f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
+                           f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
+        #                   f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
@@ -454,7 +457,7 @@ class CSGO(commands.Cog):
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
-                      brief='Creates a URL people can connect to', usage='<ServerID>',  hidden=True)
+                      brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         print(self.bot.servers[server_id])
         embed = await self.connect_embed(self.bot.servers[server_id])
