@@ -215,7 +215,6 @@ class CSGO(commands.Cog):
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
-        # match_config_json = await ctx.send(file=discord.File('match_config.json', '../match_config.json'))
         await ctx.send('If you are coaching, once you join the server, type .coach')
         loading_map_message = await ctx.send('Server is being configured')
         await asyncio.sleep(0.3)
@@ -225,7 +224,6 @@ class CSGO(commands.Cog):
         await loading_map_message.delete()
         valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
                            f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
-        #                   f'get5_loadmatch_url "{match_config_json.attachments[0].url}"')
 
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
