@@ -456,7 +456,7 @@ class CSGO(commands.Cog):
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         embed = await self.connect_embed(self.bot.servers[server_id])
-        await ctx.send(embed=embed)
+        test = await ctx.send(embed=embed)
 
     @connect.error
     async def connect_error(self, ctx: commands.Context, error: Exception):
@@ -521,6 +521,15 @@ class CSGO(commands.Cog):
                                       value=f'{server.team_names[0]}', inline=True)
                 score_embed.add_field(name=f'{server.team_scores[1]}',
                                       value=f'{server.team_names[1]}', inline=True)
+                gotv = server.get_gotv()
+                if gotv is None:
+                    score_embed.add_field(name='GOTV',
+                                          value='Not Configured',
+                                          inline=False)
+                else:
+                    score_embed.add_field(name='GOTV',
+                                          value=f'connect {server.server_address}:{gotv}',
+                                          inline=False)
                 score_embed.set_footer(text="🟢 Live")
                 await ctx.send(embed=score_embed)
 
