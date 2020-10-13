@@ -163,7 +163,7 @@ class CSGO(commands.Cog):
         team1_steamIDs = []
         team2_steamIDs = []
 
-        if await ctx.author.voice.channel.category is None:
+        if ctx.author.voice.channel.category is None:
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
                                                                  user_limit=7)
             team2_channel = await ctx.guild.create_voice_channel(name=f'team_{team2_captain.display_name}',

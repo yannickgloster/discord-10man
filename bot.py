@@ -7,7 +7,7 @@ from typing import List
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 __dev__ = 745000319942918303
 
 class Discord_10man(commands.Bot):
