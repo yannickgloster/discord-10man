@@ -46,8 +46,14 @@ class Setup(commands.Cog):
         self.bot.queue_voice_channel = ctx.author.voice.channel
         self.bot.queue_ctx = ctx
         if enabled:
-            self.bot.cogs['CSGO'].pug.enabled = not enabled
-            self.bot.cogs['CSGO'].queue_check.start()
+            if self.bot.cogs['CSGO'].queue_check.is_running():
+                self.bot.cogs['CSGO'].queue_check.restart()
+            else:
+                self.bot.cogs['CSGO'].queue_check.start()
+            self.bot.cogs['CSGO'].pug.enabled = False
+        else:
+            self.bot.cogs['CSGO'].queue_check.stop()
+            self.bot.cogs['CSGO'].pug.enabled = True
         await ctx.send(
             f'{self.bot.queue_ctx.author.voice.channel} is the queue channel.\n'
             f'Queue is {"enabled" if enabled else "disabled"}.\n'
