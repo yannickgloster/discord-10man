@@ -241,7 +241,9 @@ class CSGO(commands.Cog):
 
         csgo_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
                                 players=team1 + team2, score_message=score_message)
+        csgo_server.set_team_names(['team1', 'team2'])
         self.bot.web_server.add_server(csgo_server)
+
 
         if not self.pug.enabled:
             self.queue_check.start()
