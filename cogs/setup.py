@@ -38,7 +38,8 @@ class Setup(commands.Cog):
             await ctx.send(str(error))
         traceback.print_exc()
 
-    @commands.command(help='Command to set the server for the queue system. You must be in a voice channel.',
+    @commands.command(aliases=['setupqueue'],
+                      help='Command to set the server for the queue system. You must be in a voice channel.',
                       brief='Set\'s the server for the queue')
     @commands.check(checks.voice_channel)
     async def setup_queue(self, ctx: commands.Context, enabled: bool = False):

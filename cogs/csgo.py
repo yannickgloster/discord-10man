@@ -415,12 +415,13 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
+        print(self.bot.queue_voice_channel.members)
         available: bool = False
         for server in self.bot.servers:
             if server.available:
                 available = True
                 break
-        if len(self.bot.queue_voice_channel.members) >= 10 & available:
+        if len(self.bot.queue_voice_channel.members) >= 10 and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
@@ -464,7 +465,7 @@ class CSGO(commands.Cog):
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         embed = await self.connect_embed(self.bot.servers[server_id])
-        test = await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @connect.error
     async def connect_error(self, ctx: commands.Context, error: Exception):
