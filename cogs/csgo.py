@@ -241,7 +241,9 @@ class CSGO(commands.Cog):
 
         csgo_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
                                 players=team1 + team2, score_message=score_message)
+        csgo_server.set_team_names(['team1', 'team2'])
         self.bot.web_server.add_server(csgo_server)
+
 
         if not self.pug.enabled:
             self.queue_check.start()
@@ -413,12 +415,13 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
+        print(self.bot.queue_voice_channel.members)
         available: bool = False
         for server in self.bot.servers:
             if server.available:
                 available = True
                 break
-        if len(self.bot.queue_voice_channel.members) >= 10 & available:
+        if len(self.bot.queue_voice_channel.members) >= 10 and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
@@ -462,7 +465,7 @@ class CSGO(commands.Cog):
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         embed = await self.connect_embed(self.bot.servers[server_id])
-        test = await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
     @connect.error
     async def connect_error(self, ctx: commands.Context, error: Exception):
@@ -493,11 +496,7 @@ class CSGO(commands.Cog):
         embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
         embed.add_field(name='Map', value=info['map'], inline=True)
         gotv = csgo_server.get_gotv()
-        if gotv is None:
-            embed.add_field(name='GOTV',
-                            value='Not Configured',
-                            inline=False)
-        else:
+        if gotv is not None:
             embed.add_field(name='GOTV',
                             value=f'connect {csgo_server.server_address}:{gotv}',
                             inline=False)
