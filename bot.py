@@ -7,6 +7,7 @@ from typing import List
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
+
 __version__ = '1.2.0'
 __dev__ = 745000319942918303
 
