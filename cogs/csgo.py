@@ -495,11 +495,7 @@ class CSGO(commands.Cog):
         embed.add_field(name='Players', value=f'{info["player_count"]}/{info["max_players"]}', inline=True)
         embed.add_field(name='Map', value=info['map'], inline=True)
         gotv = csgo_server.get_gotv()
-        if gotv is None:
-            embed.add_field(name='GOTV',
-                            value='Not Configured',
-                            inline=False)
-        else:
+        if gotv is not None:
             embed.add_field(name='GOTV',
                             value=f'connect {csgo_server.server_address}:{gotv}',
                             inline=False)
