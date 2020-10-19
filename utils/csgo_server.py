@@ -23,6 +23,7 @@ class CSGOServer:
         self.team_names: List[str] = None
         self.team_scores: List[int] = [0, 0]
 
+
     def get_context(self, ctx: Context, channels: List[discord.VoiceChannel], players: List[discord.Member],
                     score_message: discord.Message):
         self.ctx = ctx

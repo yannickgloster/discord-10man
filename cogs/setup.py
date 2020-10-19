@@ -80,7 +80,8 @@ class Setup(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def RCON_unban(self, ctx: commands.Context):
         for server in self.bot.servers:
-            unban = valve.rcon.execute((server.server_address, server.server_port), server.RCON_password, 'removeallids')
+            unban = valve.rcon.execute((server.server_address, server.server_port), server.RCON_password,
+                                       'removeallids')
             print(f'Server #{server.id} | {unban}')
 
     @RCON_unban.error
