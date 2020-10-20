@@ -416,8 +416,6 @@ class CSGO(commands.Cog):
         num_maps_left = len(map_list)
         current_team_captain = choice((team1_captain, team2_captain))
 
-        current_category = ctx.channel.category
-
         self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                              is_vetoed=is_vetoed, spacing=25)
         embed = await get_embed(current_team_captain)
