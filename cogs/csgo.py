@@ -315,6 +315,35 @@ class CSGO(commands.Cog):
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
         return embed
 
+    async def get_chosen_map_embed(self, chosen_map, session=aiohttp.ClientSession()):
+        ''' Returns a :class:`discord.Embed` which contains an image of
+        the map chosen on completion of the veto. closes the session passed.
+
+        Parameters
+        -----------
+        chosen_map: :class:`str`
+            The chosen map name string
+        session: :class:`aiohttp.ClientSession`
+            Current aiohttp client session
+        '''
+        veto_image_fp = 'result.png'
+        base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
+
+        chosen_map_file_name = chosen_map + self.veto_image.image_extension
+        chosen_map_fp = os.path.join(
+            self.veto_image.map_images_fp, chosen_map_file_name)
+        percentage = 0.25
+        VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
+        response = await session.get(f'{base_url}/map-veto')
+        path = (await response.json())['path']
+        chosen_map_image_url = base_url + path
+        map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
+                                         color=discord.Colour(0x650309))
+        map_chosen_embed.set_image(url=chosen_map_image_url)
+        await session.close()
+
+        return map_chosen_embed
+
     async def map_veto(self, ctx: commands.Context, team1_captain, team2_captain):
         '''Returns :class:`list` of :class:`str` which is the remaining map
         after the veto
@@ -387,30 +416,6 @@ class CSGO(commands.Cog):
 
             return map_list[index]
 
-        async def get_chosen_map_embed(chosen_map):
-            ''' Returns a :class:`discord.Embed` which contains an image of
-            the map chosen on completion of the veto
-
-            Parameters
-            -----------
-            chosen_map: :class:`str`
-                The chosen map name string
-            '''
-
-            chosen_map_file_name = chosen_map + self.veto_image.image_extension
-            chosen_map_fp = os.path.join(
-                self.veto_image.map_images_fp, chosen_map_file_name)
-            percentage = 0.25
-            VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
-            response = await session.get(f'{base_url}/map-veto')
-            path = (await response.json())['path']
-            chosen_map_image_url = base_url + path
-            map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
-                                             color=discord.Colour(0x650309))
-            map_chosen_embed.set_image(url=chosen_map_image_url)
-
-            return map_chosen_embed
-
         map_list = current_map_pool.copy()
         is_vetoed = [False] * len(map_list)
         num_maps_left = len(map_list)
@@ -446,10 +451,9 @@ class CSGO(commands.Cog):
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
         chosen_map = map_list[0]
-        chosen_map_embed = await get_chosen_map_embed(chosen_map)
+        chosen_map_embed = await self.get_chosen_map_embed(chosen_map, session)
         await asyncio.gather(message.clear_reactions(),
-                             message.edit(embed=chosen_map_embed),
-                             session.close())
+                             message.edit(embed=chosen_map_embed))
         return map_list
 
     @tasks.loop(seconds=5.0)
