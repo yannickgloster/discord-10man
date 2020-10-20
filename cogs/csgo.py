@@ -13,8 +13,7 @@ from bot import Discord_10man
 from databases import Database
 from datetime import date
 from discord.ext import commands, tasks
-from random import choice
-from random import randint
+from random import choice, shuffle, randint
 from typing import List
 from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
@@ -45,7 +44,31 @@ class CSGO(commands.Cog):
     @commands.check(checks.ten_players)
     @commands.check(checks.linked_accounts)
     @commands.check(checks.available_server)
-    async def pug(self, ctx: commands.Context):
+    async def pug(self, ctx: commands.Context, arg0: str = None, arg1: str = None):
+        random_teams: bool = False
+        map_arg: str = None
+        if arg0 is not None:
+            if arg0 == 'random':
+                random_teams = True
+                if arg1 is not None:
+                    if arg1.startswith('de_'):
+                        map_arg = arg1
+                        if map_arg not in current_map_pool:
+                            raise commands.CommandError(message=f'`{map_arg}` is not in Map Pool')
+                    else:
+                        raise commands.CommandError(message=f'Invalid Argument: `{arg1}`')
+            elif arg0.startswith('de_'):
+                map_arg = arg0
+                if map_arg not in current_map_pool:
+                    raise commands.CommandError(message=f'`{map_arg}` is not in Map Pool')
+                if arg1 is not None:
+                    if arg1 == 'random':
+                        random_teams = True
+                    else:
+                        raise commands.CommandError(message=f'Invalid Argument: `{arg1}`')
+            else:
+                raise commands.CommandError(message=f'Invalid Argument: `{arg0}`')
+
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
         await db.connect()
@@ -60,105 +83,125 @@ class CSGO(commands.Cog):
         players = players[0: 13]
         if self.bot.dev:
             players = [ctx.author] * 10
-        emojis = emoji_bank.copy()
-        del emojis[len(players) - 2:len(emojis)]
-        emojis_selected = []
-        team1 = []
-        team2 = []
-        team1_captain = players[randint(0, len(players) - 1)]
-        team1.append(team1_captain)
-        players.remove(team1_captain)
-        team2_captain = players[randint(0, len(players) - 1)]
-        team2.append(team2_captain)
-        players.remove(team2_captain)
 
-        current_team_player_select = 1
-
-        current_captain = team1_captain
-        player_veto_count = 0
-
-        message = await ctx.send('10 man time\nLoading player selection...')
-        for emoji in emojis:
-            await message.add_reaction(emoji)
-
-        emoji_remove = []
-
-        while len(players) > 0:
-            message_text = ''
-            players_text = ''
-
-            if current_team_player_select == 1:
-                message_text += f'<@{team1_captain.id}>'
-                current_captain = team1_captain
-            elif current_team_player_select == 2:
-                message_text += f'<@{team2_captain.id}>'
-                current_captain = team2_captain
-
-            message_text += f' select {player_veto[player_veto_count]}\n'
-            message_text += 'You have 60 seconds to choose your player(s)\n'
-
-            i = 0
-            for player in players:
-                players_text += f'{emojis[i]} - <@{player.id}>\n'
-                i += 1
-            embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
+        if random_teams:
+            shuffle(players)
+            team1 = players[:len(players) // 2]
+            team2 = players[len(players) // 2:]
+            team1_captain = team1[0]
+            team2_captain = team2[0]
+            message_text = 'Random Teams'
+            message = await ctx.send(message_text)
+            embed = self.player_veto_embed(message_text=message_text, players_text='Random Teams', team1=team1,
                                            team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
-            if len(emoji_remove) > 0:
-                for emoji in emoji_remove:
-                    await message.clear_reaction(emoji)
-                emoji_remove = []
+        else:
+            emojis = emoji_bank.copy()
+            del emojis[len(players) - 2:len(emojis)]
+            emojis_selected = []
+            team1 = []
+            team2 = []
+            team1_captain = players[randint(0, len(players) - 1)]
+            team1.append(team1_captain)
+            players.remove(team1_captain)
+            team2_captain = players[randint(0, len(players) - 1)]
+            team2.append(team2_captain)
+            players.remove(team2_captain)
 
-            selected_players = 0
-            seconds = 0
-            while True:
-                await asyncio.sleep(1)
-                message = await ctx.fetch_message(message.id)
+            current_team_player_select = 1
 
-                for reaction in message.reactions:
-                    users = await reaction.users().flatten()
-                    if current_captain in users and selected_players < player_veto[player_veto_count] and not (
-                            reaction.emoji in emojis_selected):
-                        index = emojis.index(reaction.emoji)
+            current_captain = team1_captain
+            player_veto_count = 0
+
+            message = await ctx.send('10 man time\nLoading player selection...')
+            for emoji in emojis:
+                await message.add_reaction(emoji)
+
+            emoji_remove = []
+
+            while len(players) > 0:
+                message_text = ''
+                players_text = ''
+
+                if current_team_player_select == 1:
+                    message_text += f'<@{team1_captain.id}>'
+                    current_captain = team1_captain
+                elif current_team_player_select == 2:
+                    message_text += f'<@{team2_captain.id}>'
+                    current_captain = team2_captain
+
+                message_text += f' select {player_veto[player_veto_count]}\n'
+                message_text += 'You have 60 seconds to choose your player(s)\n'
+
+                i = 0
+                for player in players:
+                    players_text += f'{emojis[i]} - <@{player.id}>\n'
+                    i += 1
+                embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
+                                               team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
+                await message.edit(content=message_text, embed=embed)
+                if len(emoji_remove) > 0:
+                    for emoji in emoji_remove:
+                        await message.clear_reaction(emoji)
+                    emoji_remove = []
+
+                selected_players = 0
+                seconds = 0
+                while True:
+                    await asyncio.sleep(1)
+                    message = await ctx.fetch_message(message.id)
+
+                    for reaction in message.reactions:
+                        users = await reaction.users().flatten()
+                        if current_captain in users and selected_players < player_veto[player_veto_count] and not (
+                                reaction.emoji in emojis_selected):
+                            index = emojis.index(reaction.emoji)
+                            if current_team_player_select == 1:
+                                team1.append(players[index])
+                            if current_team_player_select == 2:
+                                team2.append(players[index])
+                            emojis_selected.append(reaction.emoji)
+                            emoji_remove.append(reaction.emoji)
+                            del emojis[index]
+                            del players[index]
+                            selected_players += 1
+
+                    seconds += 1
+
+                    if seconds % 60 == 0:
+                        for _ in range(0, player_veto[player_veto_count]):
+                            index = randint(0, len(players) - 1)
+                            if current_team_player_select == 1:
+                                team1.append(players[index])
+                            if current_team_player_select == 2:
+                                team2.append(players[index])
+                            emojis_selected.append(emojis[index])
+                            del emojis[index]
+                            del players[index]
+                            selected_players += 1
+
+                    if selected_players == player_veto[player_veto_count]:
                         if current_team_player_select == 1:
-                            team1.append(players[index])
-                        if current_team_player_select == 2:
-                            team2.append(players[index])
-                        emojis_selected.append(reaction.emoji)
-                        emoji_remove.append(reaction.emoji)
-                        del emojis[index]
-                        del players[index]
-                        selected_players += 1
+                            current_team_player_select = 2
+                        elif current_team_player_select == 2:
+                            current_team_player_select = 1
+                        break
 
-                seconds += 1
+                player_veto_count += 1
 
-                if seconds % 60 == 0:
-                    for _ in range(0, player_veto[player_veto_count]):
-                        index = randint(0, len(players) - 1)
-                        if current_team_player_select == 1:
-                            team1.append(players[index])
-                        if current_team_player_select == 2:
-                            team2.append(players[index])
-                        emojis_selected.append(emojis[index])
-                        del emojis[index]
-                        del players[index]
-                        selected_players += 1
-
-                if selected_players == player_veto[player_veto_count]:
-                    if current_team_player_select == 1:
-                        current_team_player_select = 2
-                    elif current_team_player_select == 2:
-                        current_team_player_select = 1
-                    break
-
-            player_veto_count += 1
-
-        message_text = 'Map Veto Loading'
+        if map_arg is None:
+            message_text = 'Map Veto Loading'
+        else:
+            message_text = f'Map is `{map_arg}`'
         players_text = 'None'
         embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
                                        team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
         await message.edit(content=message_text, embed=embed)
         await message.clear_reactions()
+
+        if map_arg is not None:
+            chosen_map_embed = await self.get_chosen_map_embed(map_arg)
+            await ctx.send(embed=chosen_map_embed)
 
         team1_steamIDs = []
         team2_steamIDs = []
@@ -167,7 +210,7 @@ class CSGO(commands.Cog):
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
                                                                  user_limit=7)
             team2_channel = await ctx.guild.create_voice_channel(name=f'team_{team2_captain.display_name}',
-                                                                          user_limit=7)
+                                                                 user_limit=7)
         else:
             team1_channel = await ctx.author.voice.channel.category.create_voice_channel(
                 name=f'team_{team1_captain.display_name}', user_limit=7)
@@ -186,7 +229,10 @@ class CSGO(commands.Cog):
                                       {"player": str(player.id)})
             team2_steamIDs.append(data[0])
 
-        map_list = await self.map_veto(ctx, team1_captain, team2_captain)
+        if map_arg is None:
+            map_list = await self.map_veto(ctx, team1_captain, team2_captain)
+        else:
+            map_list = map_arg
 
         bot_ip = self.bot.web_server.IP
         if self.bot.bot_IP != "":
@@ -244,7 +290,6 @@ class CSGO(commands.Cog):
         csgo_server.set_team_names(['team1', 'team2'])
         self.bot.web_server.add_server(csgo_server)
 
-
         if not self.pug.enabled:
             self.queue_check.start()
 
@@ -273,6 +318,35 @@ class CSGO(commands.Cog):
         embed.add_field(name='Players', value=players_text, inline=True)
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
         return embed
+
+    async def get_chosen_map_embed(self, chosen_map, session=aiohttp.ClientSession()):
+        ''' Returns a :class:`discord.Embed` which contains an image of
+        the map chosen on completion of the veto. closes the session passed.
+
+        Parameters
+        -----------
+        chosen_map: :class:`str`
+            The chosen map name string
+        session: :class:`aiohttp.ClientSession`
+            Current aiohttp client session
+        '''
+        veto_image_fp = 'result.png'
+        base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
+
+        chosen_map_file_name = chosen_map + self.veto_image.image_extension
+        chosen_map_fp = os.path.join(
+            self.veto_image.map_images_fp, chosen_map_file_name)
+        percentage = 0.25
+        VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
+        response = await session.get(f'{base_url}/map-veto')
+        path = (await response.json())['path']
+        chosen_map_image_url = base_url + path
+        map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
+                                         color=discord.Colour(0x650309))
+        map_chosen_embed.set_image(url=chosen_map_image_url)
+        await session.close()
+
+        return map_chosen_embed
 
     async def map_veto(self, ctx: commands.Context, team1_captain, team2_captain):
         '''Returns :class:`list` of :class:`str` which is the remaining map
@@ -346,36 +420,10 @@ class CSGO(commands.Cog):
 
             return map_list[index]
 
-        async def get_chosen_map_embed(chosen_map):
-            ''' Returns a :class:`discord.Embed` which contains an image of
-            the map chosen on completion of the veto
-
-            Parameters
-            -----------
-            chosen_map: :class:`str`
-                The chosen map name string
-            '''
-
-            chosen_map_file_name = chosen_map + self.veto_image.image_extension
-            chosen_map_fp = os.path.join(
-                self.veto_image.map_images_fp, chosen_map_file_name)
-            percentage = 0.25
-            VetoImage.resize(chosen_map_fp, percentage, output_fp=veto_image_fp)
-            response = await session.get(f'{base_url}/map-veto')
-            path = (await response.json())['path']
-            chosen_map_image_url = base_url + path
-            map_chosen_embed = discord.Embed(title=f'The chosen map is ```{chosen_map}```',
-                                             color=discord.Colour(0x650309))
-            map_chosen_embed.set_image(url=chosen_map_image_url)
-
-            return map_chosen_embed
-
         map_list = current_map_pool.copy()
         is_vetoed = [False] * len(map_list)
         num_maps_left = len(map_list)
         current_team_captain = choice((team1_captain, team2_captain))
-
-        current_category = ctx.channel.category
 
         self.veto_image.construct_veto_image(map_list, veto_image_fp,
                                              is_vetoed=is_vetoed, spacing=25)
@@ -407,10 +455,9 @@ class CSGO(commands.Cog):
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
         chosen_map = map_list[0]
-        chosen_map_embed = await get_chosen_map_embed(chosen_map)
+        chosen_map_embed = await self.get_chosen_map_embed(chosen_map, session)
         await asyncio.gather(message.clear_reactions(),
-                             message.edit(embed=chosen_map_embed),
-                             session.close())
+                             message.edit(embed=chosen_map_embed))
         return map_list
 
     @tasks.loop(seconds=5.0)
@@ -421,7 +468,7 @@ class CSGO(commands.Cog):
             if server.available:
                 available = True
                 break
-        if len(self.bot.queue_voice_channel.members) >= 10 and available:
+        if (len(self.bot.queue_voice_channel.members) >= 10 or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)

@@ -13,7 +13,8 @@ class Setup(commands.Cog):
     def __init__(self, bot: Discord_10man):
         self.bot: Discord_10man = bot
 
-    @commands.command(help='This command connects users steam account to the bot.',
+    @commands.command(aliases=['login'],
+                      help='This command connects users steam account to the bot.',
                       brief='Connect your SteamID to the bot', usage='<SteamID or CommunityURL>')
     async def link(self, ctx: commands.Context, steamID_input: str):
         steamID = SteamID(steamID_input)
@@ -42,7 +43,7 @@ class Setup(commands.Cog):
                       help='Command to set the server for the queue system. You must be in a voice channel.',
                       brief='Set\'s the server for the queue')
     @commands.check(checks.voice_channel)
-    async def setup_queue(self, ctx: commands.Context, enabled: bool = False):
+    async def setup_queue(self, ctx: commands.Context, enabled: bool = True):
         self.bot.queue_voice_channel = ctx.author.voice.channel
         self.bot.queue_ctx = ctx
         if enabled:
