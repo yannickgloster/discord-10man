@@ -199,6 +199,9 @@ class CSGO(commands.Cog):
         await message.edit(content=message_text, embed=embed)
         await message.clear_reactions()
 
+        chosen_map_embed = await self.get_chosen_map_embed(map_arg)
+        await ctx.send(embed=chosen_map_embed)
+
         team1_steamIDs = []
         team2_steamIDs = []
 
