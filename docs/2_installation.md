@@ -114,13 +114,17 @@ Copy that file to `csgo/addons/sourcemod/plugins` on your CSGO Server.
     3) Rename `config_example.json` to `config.json`
     4) Open the file and edit the information:
         - Replace the `discord_token` with the token we got from your bot in Section 1) subsection v.
-        - Leave `bot_IP` blank for the time being
+        - Fill in `bot_IP` with the public IP of the bot, more info on that later on
+        - Get a Steam Web API Key from here
+            - [https://steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
         - Fill in your server information
         - If you have multiple servers, the json file might look something like this:
         
         ```json
         {
             "discord_token": "123fkdjsh123alksjfhlaskdjafhlkj1hl3kj4hlkjss",
+            "bot_IP": "",
+            "steam_web_API_key": "123ABDKLK12938712938SBDDS1723987",
             "servers": [
                 {
                     "server_address": "csgo.yannickgloster.com",

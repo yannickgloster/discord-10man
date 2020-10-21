@@ -26,6 +26,12 @@ Once the game is over the team channels will be deleted but users will not be pu
 ## Commands
 #### User Commands
 - `.pug`: Starts a pug with the members of a voice channel. There must be 10 members in the voice channel and each member must have used the `.link` command.
+    - You can add the option arguments `random` or `map_name` to the command to start the pug with random teams or a predefined map.
+    - Examples:
+      - `.pug random` - a pug with a map veto but random teams
+      - `.pug de_dust2` - a pug on de_dust2 with a player veto 
+      - `.pug random de_dust2` - a pug with random teams on de_dust2
+      - `.pug de_dust2 random` - a pug with random teams on de_dust2
 - `.link <Steam Community URL or Steam ID>`: Connects a users steam account to the bot. Must have done before running a `.pug`.
 - `.connect`: Shows the server connect message.
 -  `.matches`: Shows the live matches and their scores.
