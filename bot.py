@@ -8,25 +8,32 @@ from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
 
-__version__ = '1.0.3'
+__version__ = '1.2.0'
 __dev__ = 745000319942918303
-
 
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
         # TODO: Change prefix to . when syncing
+        # commands.when_mentioned_or('e!')
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
-                         help_command=commands.DefaultHelpCommand(verify_checks=False))
-        self.intents.members = True
-        self.intents.presences = False
+                         help_command=commands.DefaultHelpCommand(verify_checks=False),
+                         intents=discord.Intents(
+                             guilds=True, members=True, bans=True, emojis=True, integrations=True, invites=True,
+                             voice_states=True, presences=False, messages=True, guild_messages=True, dm_messages=True,
+                             reactions=True, guild_reactions=True, dm_reactions=True, typing=True, guild_typing=True,
+                             dm_typing=True
+                         ))
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
+        self.steam_web_api_key = config['steam_web_API_key']
         self.servers: List[CSGOServer] = []
         for i, server in enumerate(config['servers']):
-            self.servers.append(CSGOServer(i, server['server_address'], server['server_port'], server['server_password'], server['RCON_password']))
+            self.servers.append(
+                CSGOServer(i, server['server_address'], server['server_port'], server['server_password'],
+                           server['RCON_password']))
         self.web_server = WebServer(bot=self)
         self.dev: bool = False
-        self.version:str = __version__
+        self.version: str = __version__
         self.queue_ctx: commands.Context = None
         self.queue_voice_channel: discord.VoiceChannel = None
 
