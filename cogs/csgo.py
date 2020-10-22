@@ -264,13 +264,13 @@ class CSGO(commands.Cog):
             'team1': {
                 'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
-                'flag': {team1_country},
+                'flag': team1_country,
                 'players': team1_steamIDs
             },
             'team2': {
                 'name': f'team_{team2_captain.display_name}',
                 'tag': 'team2',
-                'flag': {team2_country},
+                'flag': team2_country,
                 'players': team2_steamIDs
             },
             'cvars': {
