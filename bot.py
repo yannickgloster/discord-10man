@@ -25,6 +25,7 @@ class Discord_10man(commands.Bot):
                          ))
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
+        self.steam_web_api_key = config['steam_web_API_key']
         self.servers: List[CSGOServer] = []
         for i, server in enumerate(config['servers']):
             self.servers.append(

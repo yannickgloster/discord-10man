@@ -14,6 +14,7 @@ from databases import Database
 from datetime import date
 from discord.ext import commands, tasks
 from random import choice, shuffle, randint
+from steam.steamid import SteamID
 from typing import List
 from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
@@ -238,6 +239,19 @@ class CSGO(commands.Cog):
         if self.bot.bot_IP != "":
             bot_ip = self.bot.bot_IP
 
+        team1_country = 'IE'
+        team2_country = 'IE'
+        session = aiohttp.ClientSession()
+        async with session.get(f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
+                               f'?key={self.bot.steam_web_api_key}'
+                               f'&steamids={SteamID(team1_steamIDs[0]).as_64},{SteamID(team2_steamIDs[0]).as_64}') as resp:
+            captain_info = await resp.json()
+            if 'loccountrycode' in captain_info['response']['players'][0]:
+                team1_country = captain_info['response']['players'][0]['loccountrycode']
+            if 'loccountrycode' in captain_info['response']['players'][1]:
+                team2_country = captain_info['response']['players'][1]['loccountrycode']
+        await session.close()
+
         match_config = {
             'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
             'num_maps': 1,
@@ -250,13 +264,13 @@ class CSGO(commands.Cog):
             'team1': {
                 'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
-                'flag': 'IE',
+                'flag': team1_country,
                 'players': team1_steamIDs
             },
             'team2': {
                 'name': f'team_{team2_captain.display_name}',
                 'tag': 'team2',
-                'flag': 'IE',
+                'flag': team2_country,
                 'players': team2_steamIDs
             },
             'cvars': {
