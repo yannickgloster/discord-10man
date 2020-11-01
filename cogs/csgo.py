@@ -523,7 +523,6 @@ class CSGO(commands.Cog):
         for member in members:
             if member not in user_reactions:
                 ready = False
-                break
             else:
                 self.bot.users_not_ready.remove(member)
 
