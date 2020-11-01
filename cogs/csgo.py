@@ -358,6 +358,8 @@ class CSGO(commands.Cog):
         session: :class:`aiohttp.ClientSession`
             Current aiohttp client session
         '''
+        if session.closed:
+            session = aiohttp.ClientSession()
         veto_image_fp = 'result.png'
         base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
 
