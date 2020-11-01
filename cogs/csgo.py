@@ -504,6 +504,7 @@ class CSGO(commands.Cog):
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
             await ready_up_message.add_reaction('✅')
             self.ready_up.start(message=ready_up_message, members=self.bot.queue_voice_channel.members)
+            self.bot.users_not_ready = self.bot.queue_voice_channel.members
             self.queue_check.stop()
 
     @tasks.loop(seconds=1.0, count=60)
@@ -517,12 +518,14 @@ class CSGO(commands.Cog):
                 check_emoji = reaction
                 break
 
-        users = await check_emoji.users().flatten()
+        user_reactions = await check_emoji.users().flatten()
         ready = True
         for member in members:
-            if member not in users:
+            if member not in user_reactions:
                 ready = False
                 break
+            else:
+                self.bot.users_not_ready.remove(member)
 
         if ready:
             self.readied_up = True
@@ -534,8 +537,12 @@ class CSGO(commands.Cog):
             self.readied_up = False
             await self.pug(self.bot.queue_ctx)
         else:
-            # TODO: Kick people who haven't readied up
-            await self.bot.queue_ctx.send('Not everyone readied up')
+            not_ready_text: List[str] = []
+            for member in self.bot.users_not_ready:
+                not_ready_text.append(f'<@{member.id}>')
+                await member.move_to(None, reason='You did not ready up')
+            await self.bot.queue_ctx.send(f'{", ".join(map(str, not_ready_text))} did not ready up')
+            self.bot.users_not_ready = []
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
