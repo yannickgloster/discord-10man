@@ -117,7 +117,7 @@ class WebServer:
                     score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
 
-                elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
+                elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end':
                     if get5_event['event'] == 'series_end':
                         await server.score_message.edit(content='Game Over')
                     elif get5_event['event'] == 'series_cancel':
