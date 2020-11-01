@@ -71,7 +71,7 @@ class Utils(commands.Cog):
                 await owner.send(embed=embed)
         await session.close()
 
-    @commands.command(aliases=['version'], help='This command gets the bot information and version')
+    @commands.command(aliases=['version', 'v', 'a'], help='This command gets the bot information and version')
     async def about(self, ctx: commands.Context):
         embed = discord.Embed(color=0xff0000)
         embed.add_field(name=f'Discord 10 Man Bot v{self.bot.version}',
