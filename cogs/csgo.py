@@ -36,6 +36,10 @@ class CSGO(commands.Cog):
         self.veto_image = veto_image
         self.readied_up: bool = False
 
+    @commands.command(hidden=True)
+    async def test(self, ctx: commands.Context, *args):
+        print('test')
+
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
                            'captains. It then allows those captains to select the members of their '
@@ -45,30 +49,32 @@ class CSGO(commands.Cog):
     @commands.check(checks.ten_players)
     @commands.check(checks.linked_accounts)
     @commands.check(checks.available_server)
-    async def pug(self, ctx: commands.Context, arg0: str = None, arg1: str = None):
+    async def pug(self, ctx: commands.Context, *args):
         random_teams: bool = False
         map_arg: str = None
-        if arg0 is not None:
-            if arg0 == 'random':
+        team1_captain_arg: discord.Member = None
+        team2_captain_arg: discord.Member = None
+        for arg in args:
+            if arg == 'random':
                 random_teams = True
-                if arg1 is not None:
-                    if arg1.startswith('de_'):
-                        map_arg = arg1
-                        if map_arg not in current_map_pool:
-                            raise commands.CommandError(message=f'`{map_arg}` is not in Map Pool')
-                    else:
-                        raise commands.CommandError(message=f'Invalid Argument: `{arg1}`')
-            elif arg0.startswith('de_'):
-                map_arg = arg0
+            elif arg.startswith('de_'):
+                map_arg = arg
                 if map_arg not in current_map_pool:
                     raise commands.CommandError(message=f'`{map_arg}` is not in Map Pool')
-                if arg1 is not None:
-                    if arg1 == 'random':
-                        random_teams = True
-                    else:
-                        raise commands.CommandError(message=f'Invalid Argument: `{arg1}`')
             else:
-                raise commands.CommandError(message=f'Invalid Argument: `{arg0}`')
+                member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
+                if member in ctx.author.voice.channel.members:
+                    if team1_captain_arg is None:
+                        team1_captain_arg = member
+                    elif team2_captain_arg is None and member is not team1_captain_arg:
+                        team2_captain_arg = member
+                    else:
+                        if member is team1_captain_arg:
+                            raise commands.CommandError(message=f'One user cannot be captain of 2 teams.')
+                        else:
+                            raise commands.CommandError(message=f'You can only set 2 captains.')
+                else:
+                    raise commands.CommandError(message=f'Invalid Argument: `{arg}`')
 
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
@@ -102,10 +108,17 @@ class CSGO(commands.Cog):
             emojis_selected = []
             team1 = []
             team2 = []
-            team1_captain = players[randint(0, len(players) - 1)]
+            if team1_captain_arg is not None:
+                team1_captain = team1_captain_arg
+            else:
+                team1_captain = players[randint(0, len(players) - 1)]
             team1.append(team1_captain)
             players.remove(team1_captain)
-            team2_captain = players[randint(0, len(players) - 1)]
+
+            if team2_captain_arg is not None:
+                team2_captain = team2_captain_arg
+            else:
+                team2_captain = players[randint(0, len(players) - 1)]
             team2.append(team2_captain)
             players.remove(team2_captain)
 
@@ -274,7 +287,8 @@ class CSGO(commands.Cog):
                 'players': team2_steamIDs
             },
             'cvars': {
-                'get5_event_api_url': f'http://{bot_ip}:{self.bot.web_server.port}/'
+                'get5_event_api_url': f'http://{bot_ip}:{self.bot.web_server.port}/',
+                'get5_print_damage': 1
             }
         }
 
