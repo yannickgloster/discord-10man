@@ -127,7 +127,7 @@ class CSGO(commands.Cog):
             current_captain = team1_captain
             player_veto_count = 0
 
-            message = await ctx.send('10 man time\nLoading player selection...')
+            message = await ctx.send(f'{self.bot.match_size} man time\nLoading player selection...')
             for emoji in emojis:
                 await message.add_reaction(emoji)
 
@@ -498,7 +498,7 @@ class CSGO(commands.Cog):
             if server.available:
                 available = True
                 break
-        if (len(self.bot.queue_voice_channel.members) >= 10 or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
+        if (len(self.bot.queue_voice_channel.members) >= self.bot.match_size or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
@@ -511,7 +511,7 @@ class CSGO(commands.Cog):
     async def ready_up(self, message: discord.Message, members: List[discord.Member]):
         message = await self.bot.queue_ctx.fetch_message(message.id)
 
-        # TODO: Add check for only the first 10 users
+        # TODO: Add check for only the first self.bot.match_size users
         check_emoji = None
         for reaction in message.reactions:
             if reaction.emoji == '✅':

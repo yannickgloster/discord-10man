@@ -66,6 +66,27 @@ class Setup(commands.Cog):
             await ctx.send(str(error))
         traceback.print_exc()
 
+    @commands.command(aliases=['setup_queue_size', 'match_size', 'queue_size', 'set_match_size', 'set_queue_size'],
+                      help='This command sets the size of the match and the queue.',
+                      brief='Sets the size of the match & queue', usage='<size>')
+    @commands.has_permissions(administrator=True)
+    async def setup_match_size(self, ctx: commands.Context, size: int):
+        if size <= 0:
+            raise commands.CommandError(message=f'Invalid match size.')
+        if size % 2 != 0:
+            raise commands.CommandError(message=f'Match size must be an even number.')
+        self.bot.match_size = size
+        await ctx.send(f'Set match size to {self.bot.match_size}.')
+
+    @setup_match_size.error
+    async def setup_match_size_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send('Invalid Argument')
+        elif isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+        traceback.print_exc()
+
+
     @commands.command(help='Command to send a test message to the server to verify that RCON is working.',
                       brief='Sends a message to the server to test RCON', usage='<message>')
     @commands.has_permissions(administrator=True)
