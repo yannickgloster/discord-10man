@@ -133,7 +133,7 @@ class CSGO(commands.Cog):
             current_captain = team1_captain
             player_veto_count = 0
 
-            message = await ctx.send('10 man time\nLoading player selection...')
+            message = await ctx.send(f'{self.bot.match_size} man time\nLoading player selection...')
             for emoji in emojis:
                 await message.add_reaction(emoji)
 
@@ -225,6 +225,7 @@ class CSGO(commands.Cog):
 
         team1_steamIDs = []
         team2_steamIDs = []
+        spectator_steamIDs = []
 
         if ctx.author.voice.channel.category is None:
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
@@ -248,6 +249,12 @@ class CSGO(commands.Cog):
             data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
                                       {"player": str(player.id)})
             team2_steamIDs.append(data[0])
+
+        if len(self.bot.spectators) > 0:
+            for spec in self.bot.spectators:
+                data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
+                                          {"spectator": str(spec.id)})
+                spectator_steamIDs.append(data[0])
 
         if map_arg is None:
             map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -309,8 +316,9 @@ class CSGO(commands.Cog):
             'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
-            'players_per_team': len(team2),
+            'players_per_team': self.bot.match_size,
             'min_players_to_ready': 1,
+            'spectators': spectator_steamIDs,
             'team1': {
                 'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
@@ -344,7 +352,11 @@ class CSGO(commands.Cog):
 
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
-        await ctx.send(embed=connect_embed)
+        if self.bot.connect_dm:
+            for player in team1 + team2 + self.bot.spectators:
+                await player.send(embed=connect_embed)
+        else:
+            await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
         score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
         score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
@@ -535,7 +547,7 @@ class CSGO(commands.Cog):
             if server.available:
                 available = True
                 break
-        if (len(self.bot.queue_voice_channel.members) >= 10 or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
+        if (len(self.bot.queue_voice_channel.members) >= self.bot.match_size or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
@@ -548,7 +560,7 @@ class CSGO(commands.Cog):
     async def ready_up(self, message: discord.Message, members: List[discord.Member]):
         message = await self.bot.queue_ctx.fetch_message(message.id)
 
-        # TODO: Add check for only the first 10 users
+        # TODO: Add check for only the first self.bot.match_size users
         check_emoji = None
         for reaction in message.reactions:
             if reaction.emoji == '✅':
