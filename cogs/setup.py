@@ -42,13 +42,14 @@ class Setup(commands.Cog):
     @commands.command(aliases=['spectator', 'spec'],
                       help='Adds this user as a spectator in the config for the next map.',
                       brief='Add user as spectator', usage='<@User>')
+    @commands.has_permissions(administrator=True)
     async def add_spectator(self, ctx: commands.Context, spec: discord.Member):
         db = Database('sqlite:///main.sqlite')
         await db.connect()
-        data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator', {"spectator": str(spec.id)})
+        data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator', {"spectator": str(spec.id)})
         if data is None:
             raise commands.UserInputError(message=f'<@{spec.id}> needs to `.link` their account.')
-        self.bot.spectators.append(data[0])
+        self.bot.spectators.append(spec)
         await ctx.send(f'<@{spec.id}> was added as a spectator.')
 
     @add_spectator.error
@@ -60,24 +61,34 @@ class Setup(commands.Cog):
     @commands.command(aliases=['remove_spec'],
                       help='Removes this user as a spectator from the config.',
                       brief='Removes user as spectator', usage='<@User>')
+    @commands.has_permissions(administrator=True)
     async def remove_spectator(self, ctx: commands.Context, spec: discord.Member):
         db = Database('sqlite:///main.sqlite')
         await db.connect()
-        data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
+        data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator',
                                   {"spectator": str(spec.id)})
         if data is None:
             raise commands.UserInputError(message=f'User did not `.link` their account and probably is not a spectator.')
         if data[0] in self.bot.spectators:
-            self.bot.spectators.remove(data[0])
+            self.bot.spectators.remove(spec)
             await ctx.send(f'<@{spec.id}> was added as a spectator.')
         else:
             raise commands.CommandError(message=f'<@{spec.id}> is not a spectator.')
 
-    @add_spectator.error
-    async def add_spectator_error(self, ctx: commands.Context, error: Exception):
+    @remove_spectator.error
+    async def remove_spectator_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.UserInputError) or isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
+
+    @commands.command(aliases=['dm'],
+                      help='Command to enable or disable sending a dm with the connect ip vs posting it in the channel',
+                      brief='Enable or disable connect via dm')
+    @commands.check(checks.voice_channel)
+    @commands.has_permissions(administrator=True)
+    async def connect_dm(self, ctx: commands.Context, enabled: bool = False):
+        self.bot.connect_dm = enabled
+        await ctx.send(f'Connect message will {"not" if not enabled else ""} be sent via a DM.')
 
     @commands.command(aliases=['setupqueue'],
                       help='Command to set the server for the queue system. You must be in a voice channel.',

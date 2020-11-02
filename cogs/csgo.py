@@ -219,6 +219,7 @@ class CSGO(commands.Cog):
 
         team1_steamIDs = []
         team2_steamIDs = []
+        spectator_steamIDs = []
 
         if ctx.author.voice.channel.category is None:
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
@@ -242,6 +243,12 @@ class CSGO(commands.Cog):
             data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
                                       {"player": str(player.id)})
             team2_steamIDs.append(data[0])
+
+        if len(self.bot.spectators) > 0:
+            for spec in self.bot.spectators:
+                data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
+                                          {"spectator": str(spec.id)})
+                spectator_steamIDs.append(data[0])
 
         if map_arg is None:
             map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -272,9 +279,9 @@ class CSGO(commands.Cog):
             'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
-            'players_per_team': len(team2),
+            'players_per_team': self.bot.match_size,
             'min_players_to_ready': 1,
-            'spectators': {self.bot.spectators},
+            'spectators': spectator_steamIDs,
             'team1': {
                 'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
@@ -308,7 +315,11 @@ class CSGO(commands.Cog):
 
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
-        await ctx.send(embed=connect_embed)
+        if self.bot.connect_dm:
+            for player in team1 + team2 + self.bot.spectators:
+                await player.send(embed=connect_embed)
+        else:
+            await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
         score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
         score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
