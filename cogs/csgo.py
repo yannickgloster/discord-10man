@@ -10,6 +10,7 @@ import valve.rcon
 import valve.source.a2s
 
 from bot import Discord_10man
+from collections import Counter
 from databases import Database
 from datetime import date
 from discord.ext import commands, tasks
@@ -28,6 +29,11 @@ emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', 
 
 # Veto style 1 2 2 2 1, last two 1s are for if we are playing with coaches
 player_veto = [1, 2, 2, 2, 1, 1, 1]
+
+EU_ISO = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'NL',
+          'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
+
+CIS_ISO = ['BY', 'KZ', 'RU', 'UA']
 
 
 class CSGO(commands.Cog):
@@ -261,16 +267,47 @@ class CSGO(commands.Cog):
 
         team1_country = 'IE'
         team2_country = 'IE'
+
+        team1_flags = []
+        team2_flags = []
+
+        team1_flag_request = ''
+        team2_flag_request = ''
+
+        for player in team1_steamIDs:
+            team1_flag_request += SteamID(player).__str__() + ','
+        team1_flag_request = team1_flag_request[:-1]
+
+        for player in team2_steamIDs:
+            team2_flag_request += SteamID(player).__str__() + ','
+        team2_flag_request = team2_flag_request[:-1]
+
         session = aiohttp.ClientSession()
-        async with session.get(f'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/'
+        async with session.get(f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/'
                                f'?key={self.bot.steam_web_api_key}'
-                               f'&steamids={SteamID(team1_steamIDs[0]).as_64},{SteamID(team2_steamIDs[0]).as_64}') as resp:
-            captain_info = await resp.json()
-            if 'loccountrycode' in captain_info['response']['players'][0]:
-                team1_country = captain_info['response']['players'][0]['loccountrycode']
-            if 'loccountrycode' in captain_info['response']['players'][1]:
-                team2_country = captain_info['response']['players'][1]['loccountrycode']
-        await session.close()
+                               f'&steamids={team1_flag_request}') as resp:
+            player_info = await resp.json()
+            for player in player_info['response']['players']:
+                if 'loccountrycode' in player:
+                    team1_flags.append(player['loccountrycode'])
+            await session.close()
+
+        session = aiohttp.ClientSession()
+        async with session.get(f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/'
+                               f'?key={self.bot.steam_web_api_key}'
+                               f'&steamids={team2_flag_request}') as resp:
+            player_info = await resp.json()
+            for player in player_info['response']['players']:
+                if 'loccountrycode' in player:
+                    team2_flags.append(player['loccountrycode'])
+            await session.close()
+
+        # TODO: Add check for EU/CIS flag
+        if len(team1_flags) > 0:
+            team1_country = Counter(team1_flags).most_common(1)[0][0]
+        if len(team2_flags) > 0:
+            team2_country = Counter(team2_flags).most_common(1)[0][0]
+
 
         match_config = {
             'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
