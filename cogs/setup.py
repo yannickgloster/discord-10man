@@ -83,7 +83,7 @@ class Setup(commands.Cog):
             await ctx.send('Please specify the message')
         traceback.print_exc()
 
-    @commands.command(help='This command unbans everyone on the server. Useful fix',
+    @commands.command(help='This command unbans everyone on the server. Useful fix.',
                       brief='Unbans everyone from the server', hidden=True)
     @commands.has_permissions(administrator=True)
     async def RCON_unban(self, ctx: commands.Context):
@@ -98,6 +98,13 @@ class Setup(commands.Cog):
             await ctx.send('Only an administrator can unban every player')
         traceback.print_exc()
 
+    @commands.command(aliases=['end', 'stop'],
+                      help='This command force ends a match.',
+                      brief='Force ends a match', usage='<ServerID>')
+    @commands.has_permissions(administrator=True)
+    async def force_end(self, ctx: commands.Context, server_id: int = 0):
+        valve.rcon.execute((self.bot.servers[server_id].server_address, self.bot.servers[server_id].server_port),
+                           self.bot.servers[server_id].RCON_password, 'get5_endmatch')
 
 def setup(client):
     client.add_cog(Setup(client))
