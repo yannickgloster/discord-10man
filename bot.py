@@ -39,6 +39,7 @@ class Discord_10man(commands.Bot):
         self.queue_ctx: commands.Context = None
         self.queue_voice_channel: discord.VoiceChannel = None
         self.match_size = 10
+        self.spectators: List[str] = []
 
         logger = logging.getLogger('discord')
         logger.setLevel(logging.DEBUG)

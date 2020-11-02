@@ -274,6 +274,7 @@ class CSGO(commands.Cog):
             'side_type': 'always_knife',
             'players_per_team': len(team2),
             'min_players_to_ready': 1,
+            'spectators': {self.bot.spectators},
             'team1': {
                 'name': f'team_{team1_captain.display_name}',
                 'tag': 'team1',
