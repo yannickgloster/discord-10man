@@ -297,9 +297,9 @@ class CSGO(commands.Cog):
 
         # TODO: Add check for EU/CIS flag
         if len(team1_flags) > 0:
-            team1_country = max(k for k, v in Counter(team1_flags).items() if v > 1)
+            team1_country = Counter(team1_flags).most_common(1)[0]
         if len(team2_flags) > 0:
-            team2_country = max(k for k, v in Counter(team1_flags).items() if v > 1)
+            team2_country = Counter(team2_flags).most_common(1)[0]
 
 
         match_config = {
