@@ -29,7 +29,9 @@ Do you have a csgo server and want to organize PUGs with your friends in discord
 #### User Commands
 - `.pug`: Starts a pug with the members of a voice channel. There must be 10 members in the voice channel and each member must have used the `.link` command.
     - You can add the option arguments `random` or `map_name` to the command to start the pug with random teams or a predefined map.
+    - You can also at a user to make them team captain.
     - Examples:
+      - `.pug @retsol` - sets retsol as team captain
       - `.pug random` - a pug with a map veto but random teams
       - `.pug de_dust2` - a pug on de_dust2 with a player veto 
       - `.pug random de_dust2` - a pug with random teams on de_dust2
