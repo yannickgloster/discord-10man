@@ -463,7 +463,7 @@ class CSGO(commands.Cog):
             path = (await response.json())['path']
             url = base_url + path
             embed.set_image(url=url)
-            embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto',
+            embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto | You have 60 seconds',
                              icon_url=current_team_captain.avatar_url)
             return embed
 
@@ -482,7 +482,7 @@ class CSGO(commands.Cog):
             for index in range(1, num_maps + 1):
                 await message.add_reaction(emoji_bank[index])
 
-        async def get_next_map_veto(message, current_team_captain):
+        async def get_next_map_veto(message, current_team_captain, is_vetoed):
             ''' Obtains the next map which was vetoed
 
             Parameters
@@ -494,8 +494,14 @@ class CSGO(commands.Cog):
             '''
 
             check = lambda reaction, user: reaction.emoji in emoji_bank and user == current_team_captain
-            (reaction, _) = await self.bot.wait_for('reaction_add', check=check)
-            index = emoji_bank.index(reaction.emoji) - 1
+            index = -1
+            try:
+                (reaction, _) = await self.bot.wait_for('reaction_add', check=check, timeout=60.0)
+            except asyncio.TimeoutError:
+                validIndexes = [i for i in range(len(is_vetoed)) if not is_vetoed[i]]
+                index = choice(validIndexes)
+            else:
+                index = emoji_bank.index(reaction.emoji) - 1
 
             return map_list[index]
 
@@ -514,7 +520,7 @@ class CSGO(commands.Cog):
         while num_maps_left > 1:
             message = await ctx.fetch_message(message.id)
 
-            map_vetoed = await get_next_map_veto(message, current_team_captain)
+            map_vetoed = await get_next_map_veto(message, current_team_captain, is_vetoed)
             vetoed_map_index = map_list.index(map_vetoed)
             is_vetoed[vetoed_map_index] = True
 
