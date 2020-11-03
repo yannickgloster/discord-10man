@@ -563,7 +563,23 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+        not_connected_members = []
+        for member in self.bot.queue_voice_channel.members:
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :member', {"member": str(member.id)})
+            if data is None:
+                not_connected_members.append(member)
+                await member.move_to(channel=None, reason=f'Please link your account with .link <Steam Profile URL>')
 
+        if len(not_connected_members) > 0:
+            error_message = ''
+            for member in not_connected_members:
+                error_message += f'<@{member.id}> '
+            error_message += f'must connect their steam account with the command ```{self.bot.command_prefix}link <Steam Profile URL>```'
+            await self.bot.queue_ctx.send(error_message)
+
+        await db.disconnect()
         available: bool = False
         for server in self.bot.servers:
             if server.available:
