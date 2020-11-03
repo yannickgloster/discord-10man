@@ -52,3 +52,8 @@ async def active_game(ctx: commands.Context):
     if not active:
         raise commands.CommandError(message='There are no live matches')
     return True
+
+
+async def queue_running(ctx: commands.Context):
+    if ctx.bot.cogs['CSGO'].queue_check.is_running():
+        raise commands.CommandError(message='Queue not running.')

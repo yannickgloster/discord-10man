@@ -93,6 +93,7 @@ class Setup(commands.Cog):
     @commands.command(aliases=['setupqueue'],
                       help='Command to set the server for the queue system. You must be in a voice channel.',
                       brief='Set\'s the server for the queue')
+    @commands.has_permissions(administrator=True)
     @commands.check(checks.voice_channel)
     async def setup_queue(self, ctx: commands.Context, enabled: bool = True):
         self.bot.queue_voice_channel = ctx.author.voice.channel
@@ -116,6 +117,18 @@ class Setup(commands.Cog):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
+
+    @commands.command(aliases=['restart_queue'],
+                      help='The command forcefully restarts the queue.',
+                      brief='Restart\'s the queue')
+    @commands.has_permissions(administrator=True)
+    @commands.check(checks.queue_running)
+    async def force_restart_queue(self, ctx: commands.Context):
+        self.bot.cogs['CSGO'].queue_check.cancel()
+        self.bot.cogs['CSGO'].queue_check.start()
+        self.bot.cogs['CSGO'].pug.enabled = False
+        await ctx.send('Queue forcefully restarted')
+
 
     @commands.command(aliases=['setup_queue_size', 'match_size', 'queue_size', 'set_match_size', 'set_queue_size'],
                       help='This command sets the size of the match and the queue.',
