@@ -27,8 +27,8 @@ current_map_pool = active_map_pool.copy()
 
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-# Veto style 1 2 2 2 1, last two 1s are for if we are playing with coaches
-player_veto = [1, 2, 2, 2, 1, 1, 1]
+# Veto style 1 2 2 2 1 1 1, last two 1s are for if we are playing with coaches
+
 
 EU_ISO = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'NL',
           'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
@@ -138,6 +138,16 @@ class CSGO(commands.Cog):
                 await message.add_reaction(emoji)
 
             emoji_remove = []
+
+            player_veto = []
+            if self.bot.match_size == 2:
+                player_veto = [1, 1]
+            for i in range(self.bot.match_size - 2):
+                if i == 0 or i == self.bot.match_size - 3:
+                    player_veto.append(1)
+                elif i % 2 == 0:
+                    player_veto.append(2)
+            player_veto = player_veto + [1, 1]
 
             while len(players) > 0:
                 message_text = ''
