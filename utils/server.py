@@ -117,7 +117,7 @@ class WebServer:
                                               inline=False)
                     score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
-                    if get5_event["params"]["team1_score"] == 16 or get5_event["params"]["team2_score"]:
+                    if get5_event["params"]["team1_score"] == 16 or get5_event["params"]["team2_score"] == 16:
                         round_16 = True
 
                 if get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end' or round_16:
