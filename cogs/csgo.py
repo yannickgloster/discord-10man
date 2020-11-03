@@ -559,7 +559,7 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
-        print(self.bot.queue_voice_channel.members)
+
         available: bool = False
         for server in self.bot.servers:
             if server.available:
@@ -591,7 +591,8 @@ class CSGO(commands.Cog):
             if member not in user_reactions:
                 ready = False
             else:
-                self.bot.users_not_ready.remove(member)
+                if member in self.bot.users_not_ready:
+                    self.bot.users_not_ready.remove(member)
 
         if ready:
             self.readied_up = True
