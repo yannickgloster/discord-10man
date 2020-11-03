@@ -78,6 +78,13 @@ class Setup(commands.Cog):
             await ctx.send(str(error))
         traceback.print_exc()
 
+    @commands.command(aliases=['empty'],
+                      help='Empties the queue')
+    @commands.has_permissions(administrator=True)
+    async def empty_queue(self, ctx: commands.Context):
+        for member in self.bot.queue_voice_channel.members:
+            await member.move_to(channel=None, reason=f'Admin cleared the queue')
+
     @commands.command(aliases=['remove_spec'],
                       help='Removes this user as a spectator from the config.',
                       brief='Removes user as spectator', usage='<@User>')
