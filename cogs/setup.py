@@ -68,7 +68,8 @@ class Setup(commands.Cog):
         data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator',
                                   {"spectator": str(spec.id)})
         if data is None:
-            raise commands.UserInputError(message=f'User did not `.link` their account and probably is not a spectator.')
+            raise commands.UserInputError(
+                message=f'User did not `.link` their account and probably is not a spectator.')
         if data[0] in self.bot.spectators:
             self.bot.spectators.remove(spec)
             await ctx.send(f'<@{spec.id}> was added as a spectator.')
@@ -129,6 +130,11 @@ class Setup(commands.Cog):
         self.bot.cogs['CSGO'].pug.enabled = False
         await ctx.send('Queue forcefully restarted')
 
+    @force_restart_queue.error
+    async def force_restart_queue_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+        traceback.print_exc()
 
     @commands.command(aliases=['setup_queue_size', 'match_size', 'queue_size', 'set_match_size', 'set_queue_size'],
                       help='This command sets the size of the match and the queue.',
@@ -151,7 +157,6 @@ class Setup(commands.Cog):
         elif isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
-
 
     @commands.command(help='Command to send a test message to the server to verify that RCON is working.',
                       brief='Sends a message to the server to test RCON', usage='<message>')
@@ -192,6 +197,7 @@ class Setup(commands.Cog):
     async def force_end(self, ctx: commands.Context, server_id: int = 0):
         valve.rcon.execute((self.bot.servers[server_id].server_address, self.bot.servers[server_id].server_port),
                            self.bot.servers[server_id].RCON_password, 'get5_endmatch')
+
 
 def setup(client):
     client.add_cog(Setup(client))
