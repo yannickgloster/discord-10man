@@ -84,11 +84,9 @@ class CSGO(commands.Cog):
 
         if not self.pug.enabled:
             if len(self.bot.queue_captains) > 0:
-                team1_captain_arg = self.bot.queue_captains[0]
-                self.bot.queue_captains.remove(team1_captain_arg)
+                team1_captain_arg = self.bot.queue_captains.pop(0)
             if len(self.bot.queue_captains) > 0:
-                team2_captain_arg = self.bot.queue_captains[0]
-                self.bot.queue_captains.remove(team2_captain_arg)
+                team2_captain_arg = self.bot.queue_captains.pop(0)
 
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
