@@ -55,5 +55,6 @@ async def active_game(ctx: commands.Context):
 
 
 async def queue_running(ctx: commands.Context):
-    if ctx.bot.cogs['CSGO'].queue_check.is_running():
+    if not ctx.bot.cogs['CSGO'].queue_check.is_running():
         raise commands.CommandError(message='Queue not running.')
+    return True
