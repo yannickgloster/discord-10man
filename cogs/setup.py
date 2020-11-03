@@ -7,6 +7,7 @@ from bot import Discord_10man
 from databases import Database
 from discord.ext import commands
 from steam.steamid import SteamID, from_url
+from typing import List
 
 
 class Setup(commands.Cog):
@@ -54,6 +55,25 @@ class Setup(commands.Cog):
 
     @add_spectator.error
     async def add_spectator_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.UserInputError):
+            await ctx.send(str(error))
+        traceback.print_exc()
+
+    @commands.command(aliases=['queue_captain', 'captain'],
+                      help='Set\'s the queue captain for the next match', usage='<@User> ?<@User>')
+    @commands.has_permissions(administrator=True)
+    async def set_queue_captain(self, ctx: commands.Context, *args: discord.Member):
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+        for captain in args:
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator', {"spectator": str(captain.id)})
+            if data is None:
+                raise commands.UserInputError(message=f'<@{captain.id}> needs to `.link` their account.')
+            self.bot.queue_captains.append(captain)
+            await ctx.send(f'<@{captain.id}> was added as a captain for the next queue.')
+
+    @set_queue_captain.error
+    async def set_queue_captain_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.UserInputError):
             await ctx.send(str(error))
         traceback.print_exc()

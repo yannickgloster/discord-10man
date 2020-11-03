@@ -41,6 +41,7 @@ class Discord_10man(commands.Bot):
         self.match_size = 10
         self.spectators: List[discord.Member] = []
         self.connect_dm = False
+        self.queue_captains: List[discord.Member] = []
 
         logger = logging.getLogger('discord')
         logger.setLevel(logging.DEBUG)

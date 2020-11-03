@@ -82,6 +82,14 @@ class CSGO(commands.Cog):
                 else:
                     raise commands.CommandError(message=f'Invalid Argument: `{arg}`')
 
+        if not self.pug.enabled:
+            if len(self.bot.queue_captains) > 0:
+                team1_captain_arg = self.bot.queue_captains[0]
+                self.bot.queue_captains.remove(team1_captain_arg)
+            if len(self.bot.queue_captains) > 0:
+                team2_captain_arg = self.bot.queue_captains[0]
+                self.bot.queue_captains.remove(team2_captain_arg)
+
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
         await db.connect()
