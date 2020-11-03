@@ -27,8 +27,8 @@ current_map_pool = active_map_pool.copy()
 
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
-# Veto style 1 2 2 2 1, last two 1s are for if we are playing with coaches
-player_veto = [1, 2, 2, 2, 1, 1, 1]
+# Veto style 1 2 2 2 1 1 1, last two 1s are for if we are playing with coaches
+
 
 EU_ISO = ['AT', 'BE', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'NL',
           'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE']
@@ -81,6 +81,12 @@ class CSGO(commands.Cog):
                             raise commands.CommandError(message=f'You can only set 2 captains.')
                 else:
                     raise commands.CommandError(message=f'Invalid Argument: `{arg}`')
+
+        if not self.pug.enabled:
+            if len(self.bot.queue_captains) > 0:
+                team1_captain_arg = self.bot.queue_captains.pop(0)
+            if len(self.bot.queue_captains) > 0:
+                team2_captain_arg = self.bot.queue_captains.pop(0)
 
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
@@ -138,6 +144,16 @@ class CSGO(commands.Cog):
                 await message.add_reaction(emoji)
 
             emoji_remove = []
+
+            player_veto = []
+            if self.bot.match_size == 2:
+                player_veto = [1, 1]
+            for i in range(self.bot.match_size - 2):
+                if i == 0 or i == self.bot.match_size - 3:
+                    player_veto.append(1)
+                elif i % 2 == 0:
+                    player_veto.append(2)
+            player_veto = player_veto + [1, 1]
 
             while len(players) > 0:
                 message_text = ''
@@ -547,7 +563,7 @@ class CSGO(commands.Cog):
 
     @tasks.loop(seconds=5.0)
     async def queue_check(self):
-        print(self.bot.queue_voice_channel.members)
+
         available: bool = False
         for server in self.bot.servers:
             if server.available:
@@ -579,7 +595,8 @@ class CSGO(commands.Cog):
             if member not in user_reactions:
                 ready = False
             else:
-                self.bot.users_not_ready.remove(member)
+                if member in self.bot.users_not_ready:
+                    self.bot.users_not_ready.remove(member)
 
         if ready:
             self.readied_up = True

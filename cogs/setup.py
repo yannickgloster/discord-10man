@@ -7,6 +7,7 @@ from bot import Discord_10man
 from databases import Database
 from discord.ext import commands
 from steam.steamid import SteamID, from_url
+from typing import List
 
 
 class Setup(commands.Cog):
@@ -58,6 +59,32 @@ class Setup(commands.Cog):
             await ctx.send(str(error))
         traceback.print_exc()
 
+    @commands.command(aliases=['queue_captain', 'captain'],
+                      help='Set\'s the queue captain for the next match', usage='<@User> ?<@User>')
+    @commands.has_permissions(administrator=True)
+    async def set_queue_captain(self, ctx: commands.Context, *args: discord.Member):
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+        for captain in args:
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator', {"spectator": str(captain.id)})
+            if data is None:
+                raise commands.UserInputError(message=f'<@{captain.id}> needs to `.link` their account.')
+            self.bot.queue_captains.append(captain)
+            await ctx.send(f'<@{captain.id}> was added as a captain for the next queue.')
+
+    @set_queue_captain.error
+    async def set_queue_captain_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.UserInputError):
+            await ctx.send(str(error))
+        traceback.print_exc()
+
+    @commands.command(aliases=['empty'],
+                      help='Empties the queue')
+    @commands.has_permissions(administrator=True)
+    async def empty_queue(self, ctx: commands.Context):
+        for member in self.bot.queue_voice_channel.members:
+            await member.move_to(channel=None, reason=f'Admin cleared the queue')
+
     @commands.command(aliases=['remove_spec'],
                       help='Removes this user as a spectator from the config.',
                       brief='Removes user as spectator', usage='<@User>')
@@ -68,7 +95,8 @@ class Setup(commands.Cog):
         data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator',
                                   {"spectator": str(spec.id)})
         if data is None:
-            raise commands.UserInputError(message=f'User did not `.link` their account and probably is not a spectator.')
+            raise commands.UserInputError(
+                message=f'User did not `.link` their account and probably is not a spectator.')
         if data[0] in self.bot.spectators:
             self.bot.spectators.remove(spec)
             await ctx.send(f'<@{spec.id}> was added as a spectator.')
@@ -93,6 +121,7 @@ class Setup(commands.Cog):
     @commands.command(aliases=['setupqueue'],
                       help='Command to set the server for the queue system. You must be in a voice channel.',
                       brief='Set\'s the server for the queue')
+    @commands.has_permissions(administrator=True)
     @commands.check(checks.voice_channel)
     async def setup_queue(self, ctx: commands.Context, enabled: bool = True):
         self.bot.queue_voice_channel = ctx.author.voice.channel
@@ -117,6 +146,23 @@ class Setup(commands.Cog):
             await ctx.send(str(error))
         traceback.print_exc()
 
+    @commands.command(aliases=['restart_queue'],
+                      help='The command forcefully restarts the queue.',
+                      brief='Restart\'s the queue')
+    @commands.has_permissions(administrator=True)
+    @commands.check(checks.queue_running)
+    async def force_restart_queue(self, ctx: commands.Context):
+        self.bot.cogs['CSGO'].queue_check.cancel()
+        self.bot.cogs['CSGO'].queue_check.start()
+        self.bot.cogs['CSGO'].pug.enabled = False
+        await ctx.send('Queue forcefully restarted')
+
+    @force_restart_queue.error
+    async def force_restart_queue_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+        traceback.print_exc()
+
     @commands.command(aliases=['setup_queue_size', 'match_size', 'queue_size', 'set_match_size', 'set_queue_size'],
                       help='This command sets the size of the match and the queue.',
                       brief='Sets the size of the match & queue', usage='<size>')
@@ -127,6 +173,8 @@ class Setup(commands.Cog):
         if size % 2 != 0:
             raise commands.CommandError(message=f'Match size must be an even number.')
         self.bot.match_size = size
+        if self.bot.cogs['CSGO'].queue_check.is_running():
+            self.bot.cogs['CSGO'].queue_check.restart()
         await ctx.send(f'Set match size to {self.bot.match_size}.')
 
     @setup_match_size.error
@@ -136,7 +184,6 @@ class Setup(commands.Cog):
         elif isinstance(error, commands.CommandError):
             await ctx.send(str(error))
         traceback.print_exc()
-
 
     @commands.command(help='Command to send a test message to the server to verify that RCON is working.',
                       brief='Sends a message to the server to test RCON', usage='<message>')
@@ -177,6 +224,7 @@ class Setup(commands.Cog):
     async def force_end(self, ctx: commands.Context, server_id: int = 0):
         valve.rcon.execute((self.bot.servers[server_id].server_address, self.bot.servers[server_id].server_port),
                            self.bot.servers[server_id].RCON_password, 'get5_endmatch')
+
 
 def setup(client):
     client.add_cog(Setup(client))

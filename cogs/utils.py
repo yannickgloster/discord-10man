@@ -1,6 +1,7 @@
 import aiohttp
 import discord
 import checks
+import sys, os
 import traceback
 
 from bot import Discord_10man
@@ -78,6 +79,13 @@ class Utils(commands.Cog):
                         value=f'Built by <@125033487051915264> & <@282670937738969088>', inline=False)
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=['r'], help='Restarts the bot')
+    @commands.command(hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def restart(self, ctx: commands.Context):
+        await ctx.send('Restarting Bot')
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
 def setup(client):
     client.add_cog(Utils(client))
