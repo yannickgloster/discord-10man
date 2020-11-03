@@ -127,6 +127,8 @@ class Setup(commands.Cog):
         if size % 2 != 0:
             raise commands.CommandError(message=f'Match size must be an even number.')
         self.bot.match_size = size
+        if self.bot.cogs['CSGO'].queue_check.is_running():
+            self.bot.cogs['CSGO'].queue_check.restart()
         await ctx.send(f'Set match size to {self.bot.match_size}.')
 
     @setup_match_size.error
