@@ -1,5 +1,6 @@
 import discord
 import socket
+import traceback
 import uuid
 
 from aiohttp import web
@@ -33,7 +34,7 @@ class WebServer:
 
         self.bot: Discord_10man = bot
         self.IP: str = socket.gethostbyname(socket.gethostname())
-        self.port: int = 3000
+        self.port: int = self.bot.bot_port
         self.site: web.TCPSite = None
         self.csgo_servers: List[CSGOServer] = []
         self.map_veto_image_path = self.create_new_veto_filepath()
@@ -76,10 +77,9 @@ class WebServer:
                     break
 
             if server is not None:
-                if get5_event['event'] == 'series_start':
-                    server.set_team_names([get5_event['params']['team1_name'], get5_event['params']['team2_name']])
+                round_16 = False
 
-                elif get5_event['event'] == 'knife_start':
+                if get5_event['event'] == 'knife_start':
                     score_embed = discord.Embed()
                     score_embed.add_field(name=f'0',
                                           value=f'{server.team_names[0]}', inline=True)
@@ -116,8 +116,10 @@ class WebServer:
                                               inline=False)
                     score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
+                    if get5_event["params"]["team1_score"] == 16 or get5_event["params"]["team2_score"] == 16:
+                        round_16 = True
 
-                elif get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel':
+                if get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end' or round_16:
                     if get5_event['event'] == 'series_end':
                         await server.score_message.edit(content='Game Over')
                     elif get5_event['event'] == 'series_cancel':
@@ -129,7 +131,11 @@ class WebServer:
 
                     if self.bot.cogs['CSGO'].pug.enabled:
                         for player in server.players:
-                            await player.move_to(channel=server.channels[0], reason=f'Game Over')
+                            try:
+                                await player.move_to(channel=server.channels[0], reason=f'Game Over')
+                            except discord.HTTPException:
+                                traceback.print_exc()
+                                print(f'Unable to move {player}')
                     await server.channels[1].delete(reason='Game Over')
                     await server.channels[2].delete(reason='Game Over')
                     server.make_available()

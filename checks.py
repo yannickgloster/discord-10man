@@ -9,7 +9,7 @@ async def voice_channel(ctx: commands.Context):
 
 
 async def ten_players(ctx: commands.Context):
-    if ctx.author.voice is not None and (len(ctx.author.voice.channel.members) < 10 and not ctx.bot.dev):
+    if ctx.author.voice is not None and (len(ctx.author.voice.channel.members) < ctx.bot.match_size and not ctx.bot.dev):
         raise commands.CommandError(message='There must be 10 members connected to the voice channel')
     return True
 
@@ -51,4 +51,10 @@ async def active_game(ctx: commands.Context):
             break
     if not active:
         raise commands.CommandError(message='There are no live matches')
+    return True
+
+
+async def queue_running(ctx: commands.Context):
+    if not ctx.bot.cogs['CSGO'].queue_check.is_running():
+        raise commands.CommandError(message='Queue not running.')
     return True
