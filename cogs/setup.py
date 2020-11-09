@@ -112,7 +112,6 @@ class Setup(commands.Cog):
     @commands.command(aliases=['dm'],
                       help='Command to enable or disable sending a dm with the connect ip vs posting it in the channel',
                       brief='Enable or disable connect via dm')
-    @commands.check(checks.voice_channel)
     @commands.has_permissions(administrator=True)
     async def connect_dm(self, ctx: commands.Context, enabled: bool = False):
         self.bot.connect_dm = enabled
