@@ -224,6 +224,12 @@ class Setup(commands.Cog):
         valve.rcon.execute((self.bot.servers[server_id].server_address, self.bot.servers[server_id].server_port),
                            self.bot.servers[server_id].RCON_password, 'get5_endmatch')
 
+    @force_end.error
+    async def force_end_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send('Only an administrator can force end a match.')
+        traceback.print_exc()
+
 
 def setup(client):
     client.add_cog(Setup(client))
