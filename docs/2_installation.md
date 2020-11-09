@@ -115,6 +115,7 @@ Copy that file to `csgo/addons/sourcemod/plugins` on your CSGO Server.
     4) Open the file and edit the information:
         - Replace the `discord_token` with the token we got from your bot in Section 1) subsection v.
         - Fill in `bot_IP` with the public IP of the bot, more info on that later on
+        - Leave `bot_port` with default value of 3000, unless you want to portforward and use a different port
         - Get a Steam Web API Key from here
             - [https://steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)
         - Fill in your server information
@@ -123,7 +124,8 @@ Copy that file to `csgo/addons/sourcemod/plugins` on your CSGO Server.
         ```json
         {
             "discord_token": "123fkdjsh123alksjfhlaskdjafhlkj1hl3kj4hlkjss",
-            "bot_IP": "",
+            "bot_IP": "321.321.321.321",
+            "bot_port": "3000",
             "steam_web_API_key": "123ABDKLK12938712938SBDDS1723987",
             "servers": [
                 {
@@ -162,7 +164,7 @@ Copy that file to `csgo/addons/sourcemod/plugins` on your CSGO Server.
         Self-hosting:       Free hosting:                 Kinda free:
         Any computer.    No. Not even heroku.   GCP, AWS have one year free micros.
        ```
-    10) If you are self hosting, on a different service, or not on the same server as the csgo server, you will have to portforward `port 3000`
+    10) If you are self hosting, on a different service, or not on the same server as the csgo server, you will have to portforward `port 3000` (or whatever port you set in the `config.json`)
         - If you google the following, you will find a tutorial on how to do so:
         > How do I portforward [INSERT ROUTER NAME/SERVICE NAME]
         - If you portfoward, you will need to edit `config.json`. Open it in a text editor

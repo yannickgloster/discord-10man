@@ -9,11 +9,14 @@ Do you have a csgo server and want to organize PUGs with your friends in discord
 - Queue Based PUG w/ Ready Up
 - Multiple Servers
 - Random Captains
+- Selected Captains
 - Player Veto
 - Map Veto
+- Selected Map
 - Auto Voice Channel Creation for Teams
 - Channel Deletion After Game
 - Score Updates in Text Channel
+- Auto Server Configuration
 - [Get5 Features](https://github.com/splewis/get5#get5)
 - Match Statistics Collection ***COMING SOON***
 - [Dathost](https://dathost.net/) Support ***COMING SOON***
