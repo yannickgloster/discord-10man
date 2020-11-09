@@ -8,12 +8,11 @@ from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
 
-__version__ = '1.5.4-beta'
+__version__ = '1.6.0'
 __dev__ = 745000319942918303
 
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
-        # TODO: Change prefix to . when syncing
         # commands.when_mentioned_or('e!')
         super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False),
@@ -25,6 +24,10 @@ class Discord_10man(commands.Bot):
                          ))
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
+        if 'bot_port' in config:
+            self.bot_port: int = config['bot_port']
+        else:
+            self.bot_port: int = 3000
         self.steam_web_api_key = config['steam_web_API_key']
         self.servers: List[CSGOServer] = []
         # Will need to change for when there is multiple server queue

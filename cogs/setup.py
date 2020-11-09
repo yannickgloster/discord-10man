@@ -112,7 +112,6 @@ class Setup(commands.Cog):
     @commands.command(aliases=['dm'],
                       help='Command to enable or disable sending a dm with the connect ip vs posting it in the channel',
                       brief='Enable or disable connect via dm')
-    @commands.check(checks.voice_channel)
     @commands.has_permissions(administrator=True)
     async def connect_dm(self, ctx: commands.Context, enabled: bool = False):
         self.bot.connect_dm = enabled
@@ -224,6 +223,12 @@ class Setup(commands.Cog):
     async def force_end(self, ctx: commands.Context, server_id: int = 0):
         valve.rcon.execute((self.bot.servers[server_id].server_address, self.bot.servers[server_id].server_port),
                            self.bot.servers[server_id].RCON_password, 'get5_endmatch')
+
+    @force_end.error
+    async def force_end_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.MissingPermissions):
+            await ctx.send('Only an administrator can force end a match.')
+        traceback.print_exc()
 
 
 def setup(client):

@@ -19,6 +19,7 @@ from steam.steamid import SteamID
 from typing import List
 from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
+from unidecode import unidecode
 
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
@@ -99,7 +100,7 @@ class CSGO(commands.Cog):
                 break
         channel_original = ctx.author.voice.channel
         players: List[discord.Member] = ctx.author.voice.channel.members.copy()
-        players = players[0: 13]
+        players = players[:self.bot.match_size]
         if self.bot.dev:
             players = [ctx.author] * 10
 
@@ -153,7 +154,6 @@ class CSGO(commands.Cog):
                     player_veto.append(1)
                 elif i % 2 == 0:
                     player_veto.append(2)
-            player_veto = player_veto + [1, 1]
 
             while len(players) > 0:
                 message_text = ''
@@ -180,6 +180,7 @@ class CSGO(commands.Cog):
                     for emoji in emoji_remove:
                         await message.clear_reaction(emoji)
                     emoji_remove = []
+
 
                 selected_players = 0
                 seconds = 0
@@ -275,7 +276,7 @@ class CSGO(commands.Cog):
         if map_arg is None:
             map_list = await self.map_veto(ctx, team1_captain, team2_captain)
         else:
-            map_list = map_arg
+            map_list = [map_arg]
 
         bot_ip = self.bot.web_server.IP
         if self.bot.bot_IP != "":
@@ -324,6 +325,8 @@ class CSGO(commands.Cog):
         if len(team2_flags) > 0:
             team2_country = Counter(team2_flags).most_common(1)[0][0]
 
+        team1_name = f'team_{unidecode(team1_captain.display_name)}'
+        team2_name = f'team_{unidecode(team2_captain.display_name)}'
 
         match_config = {
             'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
@@ -332,24 +335,24 @@ class CSGO(commands.Cog):
             'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
-            'players_per_team': self.bot.match_size,
+            'players_per_team': self.bot.match_size/2,
             'min_players_to_ready': 1,
             'spectators': spectator_steamIDs,
             'team1': {
-                'name': f'team_{team1_captain.display_name}',
+                'name': team1_name,
                 'tag': 'team1',
                 'flag': team1_country,
                 'players': team1_steamIDs
             },
             'team2': {
-                'name': f'team_{team2_captain.display_name}',
+                'name': team2_name,
                 'tag': 'team2',
                 'flag': team2_country,
                 'players': team2_steamIDs
             },
             'cvars': {
                 'get5_event_api_url': f'http://{bot_ip}:{self.bot.web_server.port}/',
-                'get5_print_damage': 1
+                'get5_print_damage': 1,
             }
         }
 
@@ -374,13 +377,13 @@ class CSGO(commands.Cog):
         else:
             await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
-        score_embed.add_field(name='0', value=f'team_{team1_captain.display_name}', inline=True)
-        score_embed.add_field(name='0', value=f'team_{team2_captain.display_name}', inline=True)
+        score_embed.add_field(name='0', value=team1_name, inline=True)
+        score_embed.add_field(name='0', value=team2_name, inline=True)
         score_message = await ctx.send('Match in Progress', embed=score_embed)
 
         csgo_server.get_context(ctx=ctx, channels=[channel_original, team1_channel, team2_channel],
                                 players=team1 + team2, score_message=score_message)
-        csgo_server.set_team_names(['team1', 'team2'])
+        csgo_server.set_team_names([team1_name, team2_name])
         self.bot.web_server.add_server(csgo_server)
 
         if not self.pug.enabled:
@@ -636,7 +639,10 @@ class CSGO(commands.Cog):
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         embed = await self.connect_embed(self.bot.servers[server_id])
-        await ctx.send(embed=embed)
+        if self.bot.connect_dm:
+            await ctx.author.send(embed=embed)
+        else:
+            await ctx.send(embed=embed)
 
     @connect.error
     async def connect_error(self, ctx: commands.Context, error: Exception):
