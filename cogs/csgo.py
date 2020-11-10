@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import checks
+import datetime
 import discord
 import json
 import os
@@ -12,7 +13,7 @@ import valve.source.a2s
 from bot import Discord_10man
 from collections import Counter
 from databases import Database
-from datetime import date
+from datetime import datetime
 from discord.ext import commands, tasks
 from random import choice, shuffle, randint
 from steam.steamid import SteamID
@@ -329,13 +330,13 @@ class CSGO(commands.Cog):
         team2_name = f'team_{unidecode(team2_captain.display_name)}'
 
         match_config = {
-            'matchid': f'PUG-{date.today().strftime("%d-%B-%Y")}',
+            'matchid': f'PUG_{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}',
             'num_maps': 1,
             'maplist': map_list,
             'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
-            'players_per_team': self.bot.match_size/2,
+            'players_per_team': int(self.bot.match_size/2),
             'min_players_to_ready': 1,
             'spectators': spectator_steamIDs,
             'team1': {
