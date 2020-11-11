@@ -2,7 +2,9 @@
 
 ![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/yannickgloster/discord-10man?style=for-the-badge) ![GitHub](https://img.shields.io/github/license/yannickgloster/discord-10man?color=orange&style=for-the-badge) ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/yannickgloster/discord-10man?color=green&style=for-the-badge) [![Discord](https://img.shields.io/discord/762204302348517377?color=blue&style=for-the-badge)](https://discord.gg/aZfjp6V)
 
-Do you have a csgo server and want to organize PUGs with your friends in discord? This bot allows for a command driven or queue driven pick up game system. Essentially your own personal popflash, built right into your discord server.
+Do you have a csgo server and want to organize PUGs with your friends in discord? This bot allows for a command driven or queue driven pick up game system. Essentially your own personal popflash, built right into your discord server. 
+
+### For technical support, join our [discord](https://discord.gg/aZfjp6V)
 
 ## Go to the [Wiki](https://github.com/yannickgloster/discord-10man/wiki) for Setup and Usage Instructions
 
