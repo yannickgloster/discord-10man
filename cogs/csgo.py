@@ -372,7 +372,10 @@ class CSGO(commands.Cog):
         connect_embed = await self.connect_embed(csgo_server)
         if self.bot.connect_dm:
             for player in team1 + team2 + self.bot.spectators:
-                await player.send(embed=connect_embed)
+                try:
+                    await player.send(embed=connect_embed)
+                except discord.HTTPException or discord.Forbidden:
+                    await ctx.send(f'Unable to PM <@{player.id}> the server details.')
         else:
             await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
@@ -639,7 +642,10 @@ class CSGO(commands.Cog):
     async def connect(self, ctx: commands.Context, server_id: int = 0):
         embed = await self.connect_embed(self.bot.servers[server_id])
         if self.bot.connect_dm:
-            await ctx.author.send(embed=embed)
+            try:
+                await ctx.author.send(embed=embed)
+            except discord.HTTPException or discord.Forbidden:
+                await ctx.send(f'Unable to PM <@{ctx.author.id}> the server details.')
         else:
             await ctx.send(embed=embed)
 
