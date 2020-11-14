@@ -173,7 +173,7 @@ class VetoImage:
         (x_image_width, x_image_height) = x_image.size
 
         transparent_colour = (255, 0, 0, 0)
-        num_rows = round(len(map_list) / 2)
+        num_rows = (len(map_list) + 1) // 2
         canvas_size = (first_image_width * 2 + spacing,
                        first_image_height * num_rows + spacing * (num_rows - 1))
         canvas = Image.new('RGBA', canvas_size, transparent_colour)
