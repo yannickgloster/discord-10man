@@ -111,6 +111,8 @@ class VetoImage:
         The image is also darkened to enhance clarity
         '''
 
+        font = None
+
         for image_file_name in os.listdir(self.assets_fp):
             image_root_name, _ = os.path.splitext(image_file_name)
             image_fp = os.path.join(self.assets_fp, image_file_name)
@@ -121,7 +123,8 @@ class VetoImage:
             factor = 0.5
             darkened_image = enhancer.enhance(factor)
 
-            font = ImageFont.truetype(self.font_fp, int(image_width / 15))
+            if font is None:
+                font = ImageFont.truetype(self.font_fp, int(image_width / 15))
             draw = ImageDraw.Draw(darkened_image)
 
             text_width, text_height = draw.textsize(image_root_name, font=font)
