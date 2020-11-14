@@ -117,7 +117,7 @@ class Setup(commands.Cog):
         self.bot.connect_dm = enabled
         await ctx.send(f'Connect message will {"not" if not enabled else ""} be sent via a DM.')
 
-    @commands.command(aliases=['setupqueue'],
+    @commands.command(aliases=['setupqueue', 'queue_setup', 'queuesetup'],
                       help='Command to set the server for the queue system. You must be in a voice channel.',
                       brief='Set\'s the server for the queue')
     @commands.has_permissions(administrator=True)
