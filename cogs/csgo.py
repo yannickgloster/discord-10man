@@ -680,18 +680,34 @@ class CSGO(commands.Cog):
                             inline=False)
         return embed
 
-    @commands.command(aliases=['maps'], help='This command allows the user to change the map pool. '
+    @commands.command(aliases=['maps'], help='Resets the map pool to be whatever maps are specified'
                                              'Must have odd number of maps. Use "active" or "reserve" for the respective map pools.',
                       brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
     @commands.has_permissions(administrator=True)
-    async def map_pool(self, ctx: commands.Context, *, args):
+    async def map_pool(self, ctx: commands.Context, *args):
         global current_map_pool
-        if args == 'active':
-            current_map_pool = active_map_pool.copy()
-        elif args == 'reserve':
-            current_map_pool = reserve_map_pool.copy()
-        else:
-            current_map_pool = args.split().copy()
+        current_map_pool = []
+        for arg in args:
+            if arg == 'active':
+                current_map_pool += active_map_pool
+            elif arg == 'reserve':
+                current_map_pool += reserve_map_pool
+            else:
+                if os.path.isfile(f'images/map_images/{arg}.png'):
+                    if arg not in current_map_pool:
+                        current_map_pool.append(arg)
+                    else:
+                        raise commands.CommandError(message=f'`{arg}` is already in the map pool.')
+                else:
+                    raise commands.CommandError(message=f'`{arg}` does not have an image in `/images/map_images/'
+                                                        'and thus cannot be added to the map pool.\n'
+                                                        'Please put an image in that folder to continue.')
+
+    @map_pool.error
+    async def map_pool_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+        traceback.print_exc()
 
     @commands.command(aliases=['live', 'live_matches'], help='This command shows the current live matches.',
                       brief='Shows the current live matches')
