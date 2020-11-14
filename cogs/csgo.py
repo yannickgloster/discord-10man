@@ -65,10 +65,8 @@ class CSGO(commands.Cog):
         for arg in args:
             if arg == 'random':
                 random_teams = True
-            elif arg.startswith('de_'):
+            elif arg in current_map_pool:
                 map_arg = arg
-                if map_arg not in current_map_pool:
-                    raise commands.CommandError(message=f'`{map_arg}` is not in Map Pool')
             else:
                 member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
                 if member in ctx.author.voice.channel.members:
