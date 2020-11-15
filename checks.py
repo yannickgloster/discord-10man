@@ -8,9 +8,9 @@ async def voice_channel(ctx: commands.Context):
     return True
 
 
-async def ten_players(ctx: commands.Context):
+async def match_size_check(ctx: commands.Context):
     if ctx.author.voice is not None and (len(ctx.author.voice.channel.members) < ctx.bot.match_size and not ctx.bot.dev):
-        raise commands.CommandError(message='There must be 10 members connected to the voice channel')
+        raise commands.CommandError(message=f'There must be {ctx.bot.match_size} members connected to the voice channel')
     return True
 
 

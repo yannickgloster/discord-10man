@@ -54,7 +54,7 @@ class CSGO(commands.Cog):
                            'team in a 1 2 2 2 1 fashion. It then configures the server with the '
                            'correct config.', brief='Helps automate setting up a PUG')
     @commands.check(checks.voice_channel)
-    @commands.check(checks.ten_players)
+    @commands.check(checks.match_size_check)
     @commands.check(checks.linked_accounts)
     @commands.check(checks.available_server)
     async def pug(self, ctx: commands.Context, *args):
@@ -180,7 +180,6 @@ class CSGO(commands.Cog):
                         await message.clear_reaction(emoji)
                     emoji_remove = []
 
-
                 selected_players = 0
                 seconds = 0
                 while True:
@@ -245,14 +244,14 @@ class CSGO(commands.Cog):
 
         if ctx.author.voice.channel.category is None:
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
-                                                                 user_limit=7)
+                                                                 user_limit=int(self.bot.match_size / 2) + 1)
             team2_channel = await ctx.guild.create_voice_channel(name=f'team_{team2_captain.display_name}',
-                                                                 user_limit=7)
+                                                                 user_limit=int(self.bot.match_size / 2) + 1)
         else:
             team1_channel = await ctx.author.voice.channel.category.create_voice_channel(
-                name=f'team_{team1_captain.display_name}', user_limit=7)
+                name=f'team_{team1_captain.display_name}', user_limit=int(self.bot.match_size / 2) + 1)
             team2_channel = await ctx.author.voice.channel.category.create_voice_channel(
-                name=f'team_{team2_captain.display_name}', user_limit=7)
+                name=f'team_{team2_captain.display_name}', user_limit=int(self.bot.match_size / 2) + 1)
 
         for player in team1:
             await player.move_to(channel=team1_channel, reason=f'You are on {team1_captain}\'s Team')
@@ -334,7 +333,7 @@ class CSGO(commands.Cog):
             'skip_veto': True,
             'veto_first': 'team1',
             'side_type': 'always_knife',
-            'players_per_team': int(self.bot.match_size/2),
+            'players_per_team': int(self.bot.match_size / 2),
             'min_players_to_ready': 1,
             'spectators': spectator_steamIDs,
             'team1': {
@@ -590,7 +589,8 @@ class CSGO(commands.Cog):
             if server.available:
                 available = True
                 break
-        if (len(self.bot.queue_voice_channel.members) >= self.bot.match_size or (self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
+        if (len(self.bot.queue_voice_channel.members) >= self.bot.match_size or (
+                self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
             embed = discord.Embed()
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
             ready_up_message = await self.bot.queue_ctx.send(embed=embed)
