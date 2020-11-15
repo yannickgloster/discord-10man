@@ -47,9 +47,22 @@ class CSGOServer:
 
     def get_gotv(self) -> int:
         if self.gotv is None:
-            status: str = valve.rcon.execute((self.server_address, self.server_port), self.RCON_password, 'status')
+            tv_port: str = valve.rcon.execute((self.server_address, self.server_port), self.RCON_password, 'tv_port')
             try:
-                self.gotv = status[status.index('port') + 5:status.index('port') + 10]
-            except ValueError:
+                self.gotv = tv_port[findNthOccur(tv_port, '"', 3) + 1:findNthOccur(tv_port, '"', 4)]
+            except ValueError or valve.rcon.RCONMessageError:
                 self.gotv = None
         return self.gotv
+
+
+def findNthOccur(string, ch, N):
+    occur = 0
+
+    for i in range(len(string)):
+        if string[i] == ch:
+            occur += 1
+
+        if occur == N:
+            return i
+
+    return -1
