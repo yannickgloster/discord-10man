@@ -111,6 +111,8 @@ class VetoImage:
         The image is also darkened to enhance clarity
         '''
 
+        font = None
+
         for image_file_name in os.listdir(self.assets_fp):
             image_root_name, _ = os.path.splitext(image_file_name)
             image_fp = os.path.join(self.assets_fp, image_file_name)
@@ -121,7 +123,8 @@ class VetoImage:
             factor = 0.5
             darkened_image = enhancer.enhance(factor)
 
-            font = ImageFont.truetype(self.font_fp, int(image_width / 15))
+            if font is None:
+                font = ImageFont.truetype(self.font_fp, int(image_width / 15))
             draw = ImageDraw.Draw(darkened_image)
 
             text_width, text_height = draw.textsize(image_root_name, font=font)
@@ -173,7 +176,7 @@ class VetoImage:
         (x_image_width, x_image_height) = x_image.size
 
         transparent_colour = (255, 0, 0, 0)
-        num_rows = round(len(map_list) / 2)
+        num_rows = (len(map_list) + 1) // 2
         canvas_size = (first_image_width * 2 + spacing,
                        first_image_height * num_rows + spacing * (num_rows - 1))
         canvas = Image.new('RGBA', canvas_size, transparent_colour)
