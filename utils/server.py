@@ -137,7 +137,7 @@ class WebServer:
             # Used to decline any requests what doesn't match what our
             # API expects.
             self.logger.warning(f'{request.remote} sent an invalid request.')
-            return self._http_error_handler("request-type")
+            return WebServer._http_error_handler("request-type")
 
         return WebServer._http_error_handler()
 
