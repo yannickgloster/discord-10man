@@ -408,7 +408,7 @@ class CSGO(commands.Cog):
             for player in team1 + team2 + self.bot.spectators:
                 try:
                     await player.send(embed=connect_embed)
-                except discord.HTTPException or discord.Forbidden:
+                except (discord.HTTPException, discord.Forbidden):
                     await ctx.send(f'Unable to PM <@{player.id}> the server details.')
                     self.logger.warning(f'{player} was not sent the IP via DM')
         else:
