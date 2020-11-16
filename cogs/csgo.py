@@ -692,7 +692,7 @@ class CSGO(commands.Cog):
         if self.bot.connect_dm:
             try:
                 await ctx.author.send(embed=embed)
-            except discord.HTTPException or discord.Forbidden:
+            except (discord.HTTPException, discord.Forbidden):
                 await ctx.send(f'Unable to PM <@{ctx.author.id}> the server details.')
                 self.logger.warning(f'{ctx.author} was not sent the IP via DM')
         else:
