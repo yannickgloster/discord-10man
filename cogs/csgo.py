@@ -129,7 +129,7 @@ class CSGO(commands.Cog):
             team2_captain = team2[0]
             message_text = 'Random Teams'
             message = await ctx.send(message_text)
-            embed = CSGO.player_veto_embed(message_text=message_text, players_text='Random Teams', team1=team1,
+            embed = self.player_veto_embed(message_text=message_text, players_text='Random Teams', team1=team1,
                                            team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
             self.logger.debug(f'Random Team1: {team1}')
@@ -434,7 +434,6 @@ class CSGO(commands.Cog):
             self.logger.warning(str(error))
         self.logger.exception(f'{ctx.command} caused an exception')
 
-    @staticmethod
     def player_veto_embed(self, message_text, players_text, team1, team1_captain, team2, team2_captain):
         team1_text = ''
         team2_text = ''
