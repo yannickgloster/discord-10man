@@ -31,15 +31,15 @@ class VetoImage:
     '''
 
     def __init__(self, map_images_fp, x_image_fp, image_extension, assets_fp='veto_image_assets', font_fp='fonts/Arialbd.TTF'):
+        fileConfig('logging.conf')
+        self.logger = logging.getLogger(f'10man.{__name__}')
+
         self.map_images_fp = map_images_fp
         self.image_extension = image_extension
         self.x_image_fp = x_image_fp
         self.assets_fp = assets_fp
         self.font_fp = font_fp
         self.__initialise_assets()
-
-        fileConfig('logging.conf')
-        self.logger = logging.getLogger(f'10man.{__name__}')
 
     @property
     def x_image_fp(self):
@@ -99,6 +99,9 @@ class VetoImage:
         '''Creates the map icon assets by cropping them and placing the
         cropped images into the assets folder
         '''
+
+        self.logger.debug(f'__crop_map_images')
+
         for image_file_name in os.listdir(self.map_images_fp):
             image = Image.open(os.path.join(
                 self.map_images_fp, image_file_name))
@@ -117,6 +120,8 @@ class VetoImage:
 
         The image is also darkened to enhance clarity
         '''
+
+        self.logger.debug(f'__add_map_name')
 
         font = None
 
@@ -145,6 +150,8 @@ class VetoImage:
         names
         '''
 
+        self.logger.debug(f'__initialise_assets')
+
         assets = pathlib.Path(self.assets_fp)
         assets.mkdir(parents=True, exist_ok=True)
 
@@ -168,6 +175,8 @@ class VetoImage:
         spacing: :class:`int`
             The spacing in pixels between the map icons
         '''
+
+        self.logger.debug(f'construct_veto_image')
 
         if not output_fp.endswith(self.image_extension):
             output_fp = output_fp + self.image_extension
