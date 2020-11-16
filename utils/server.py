@@ -58,7 +58,7 @@ class WebServer:
                 get5_event = await request.json()
             except JSONDecodeError:
                 self.logger.warning(f'{request.remote} sent a invalid json POST ')
-                return self._http_error_handler('json-body')
+                return WebServer._http_error_handler('json-body')
 
             # TODO: Create Checks for the JSON
 
