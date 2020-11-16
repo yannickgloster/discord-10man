@@ -78,7 +78,6 @@ class WebServer:
                     break
 
             if server is not None:
-                round_16 = False
 
                 if get5_event['event'] == 'knife_start':
                     score_embed = discord.Embed()
@@ -117,10 +116,8 @@ class WebServer:
                                               inline=False)
                     score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
-                    if get5_event["params"]["team1_score"] == 16 or get5_event["params"]["team2_score"] == 16:
-                        round_16 = True
 
-                if get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end' or round_16:
+                if get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end':
                     if get5_event['event'] == 'series_end':
                         await server.score_message.edit(content='Game Over')
                     elif get5_event['event'] == 'series_cancel':
