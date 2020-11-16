@@ -22,6 +22,10 @@ from utils.csgo_server import CSGOServer
 from utils.veto_image import VetoImage
 from unidecode import unidecode
 
+import logging
+from logging.config import fileConfig
+import pprint
+
 # TODO: Allow administrators to update the maplist
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
 reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
@@ -40,13 +44,18 @@ CIS_ISO = ['BY', 'KZ', 'RU', 'UA']
 
 class CSGO(commands.Cog):
     def __init__(self, bot: Discord_10man, veto_image):
+        fileConfig('logging.conf')
+        self.logger = logging.getLogger(f'10man.{__name__}')
+        self.logger.debug(f'Loaded {__name__}')
+
         self.bot: Discord_10man = bot
         self.veto_image = veto_image
         self.readied_up: bool = False
 
     @commands.command(hidden=True)
     async def test(self, ctx: commands.Context, *args):
-        print('test')
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
+        print(f'test')
 
     @commands.command(aliases=['10man', 'setup'],
                       help='This command takes the users in a voice channel and selects two random '
@@ -58,6 +67,7 @@ class CSGO(commands.Cog):
     @commands.check(checks.linked_accounts)
     @commands.check(checks.available_server)
     async def pug(self, ctx: commands.Context, *args):
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
         random_teams: bool = False
         map_arg: str = None
         team1_captain_arg: discord.Member = None
@@ -65,15 +75,19 @@ class CSGO(commands.Cog):
         for arg in args:
             if arg == 'random':
                 random_teams = True
+                self.logger.debug('Random Teams Enabled')
             elif arg in current_map_pool:
                 map_arg = arg
+                self.logger.debug(f'Force Selected Map = {map_arg}')
             else:
                 member: discord.Member = await commands.MemberConverter().convert(ctx, arg)
                 if member in ctx.author.voice.channel.members:
                     if team1_captain_arg is None:
                         team1_captain_arg = member
+                        self.logger.debug(f'Forced Team 1 Captain = {team1_captain_arg}')
                     elif team2_captain_arg is None and member is not team1_captain_arg:
                         team2_captain_arg = member
+                        self.logger.debug(f'Forced Team 2 Captain = {team2_captain_arg}')
                     else:
                         if member is team1_captain_arg:
                             raise commands.CommandError(message=f'One user cannot be captain of 2 teams.')
@@ -83,10 +97,13 @@ class CSGO(commands.Cog):
                     raise commands.CommandError(message=f'Invalid Argument: `{arg}`')
 
         if not self.pug.enabled:
+            self.logger.info('Pug called from queue as pug is disabled')
             if len(self.bot.queue_captains) > 0:
                 team1_captain_arg = self.bot.queue_captains.pop(0)
+                self.logger.debug(f'Forced Team 1 Captain = {team1_captain_arg}')
             if len(self.bot.queue_captains) > 0:
                 team2_captain_arg = self.bot.queue_captains.pop(0)
+                self.logger.debug(f'Forced Team 2 Captain = {team2_captain_arg}')
 
         # TODO: Refactor this mess
         db = Database('sqlite:///main.sqlite')
@@ -102,6 +119,7 @@ class CSGO(commands.Cog):
         players = players[:self.bot.match_size]
         if self.bot.dev:
             players = [ctx.author] * 10
+            self.logger.info('Filling list of players with the message author because bot is in dev mode')
 
         if random_teams:
             shuffle(players)
@@ -114,6 +132,8 @@ class CSGO(commands.Cog):
             embed = self.player_veto_embed(message_text=message_text, players_text='Random Teams', team1=team1,
                                            team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
+            self.logger.debug(f'Random Team1: {team1}')
+            self.logger.debug(f'Random Team2: {team2}')
         else:
             emojis = emoji_bank.copy()
             del emojis[len(players) - 2:len(emojis)]
@@ -124,6 +144,7 @@ class CSGO(commands.Cog):
                 team1_captain = team1_captain_arg
             else:
                 team1_captain = players[randint(0, len(players) - 1)]
+            self.logger.debug(f'team1_captain = {team1_captain}')
             team1.append(team1_captain)
             players.remove(team1_captain)
 
@@ -131,6 +152,7 @@ class CSGO(commands.Cog):
                 team2_captain = team2_captain_arg
             else:
                 team2_captain = players[randint(0, len(players) - 1)]
+            self.logger.debug(f'team2_captain = {team1_captain}')
             team2.append(team2_captain)
             players.remove(team2_captain)
 
@@ -153,6 +175,7 @@ class CSGO(commands.Cog):
                     player_veto.append(1)
                 elif i % 2 == 0:
                     player_veto.append(2)
+            self.logger.debug(f'player_veto = {player_veto}')
 
             while len(players) > 0:
                 message_text = ''
@@ -164,6 +187,7 @@ class CSGO(commands.Cog):
                 elif current_team_player_select == 2:
                     message_text += f'<@{team2_captain.id}>'
                     current_captain = team2_captain
+                self.logger.debug(f'current_captain (captain currently selected) = {current_captain}')
 
                 message_text += f' select {player_veto[player_veto_count]}\n'
                 message_text += 'You have 60 seconds to choose your player(s)\n'
@@ -195,6 +219,7 @@ class CSGO(commands.Cog):
                                 team1.append(players[index])
                             if current_team_player_select == 2:
                                 team2.append(players[index])
+                            self.logger.debug(f'{current_captain} selected {players[index]}')
                             emojis_selected.append(reaction.emoji)
                             emoji_remove.append(reaction.emoji)
                             del emojis[index]
@@ -206,6 +231,7 @@ class CSGO(commands.Cog):
                     if seconds % 60 == 0:
                         for _ in range(0, player_veto[player_veto_count]):
                             index = randint(0, len(players) - 1)
+                            self.logger.debug(f'{current_captain} selected {players[index]}')
                             if current_team_player_select == 1:
                                 team1.append(players[index])
                             if current_team_player_select == 2:
@@ -258,18 +284,21 @@ class CSGO(commands.Cog):
             data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
                                       {"player": str(player.id)})
             team1_steamIDs[data[0]] = unidecode(player.display_name)
+        self.logger.debug(f'Moved all team1 players to {team1_channel}')
 
         for player in team2:
             await player.move_to(channel=team2_channel, reason=f'You are on {team2_captain}\'s Team')
             data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :player',
                                       {"player": str(player.id)})
             team2_steamIDs[data[0]] = unidecode(player.display_name)
+        self.logger.debug(f'Moved all team2 players to {team2_channel}')
 
         if len(self.bot.spectators) > 0:
             for spec in self.bot.spectators:
                 data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
                                           {"spectator": str(spec.id)})
                 spectator_steamIDs[data[0]] = unidecode(spec.display_name)
+            self.logger.info('Added Spectators')
 
         if map_arg is None:
             map_list = await self.map_veto(ctx, team1_captain, team2_captain)
@@ -277,7 +306,7 @@ class CSGO(commands.Cog):
             map_list = [map_arg]
 
         bot_ip = self.bot.web_server.IP
-        if self.bot.bot_IP != "":
+        if self.bot.bot_IP != '':
             bot_ip = self.bot.bot_IP
 
         team1_country = 'IE'
@@ -297,6 +326,7 @@ class CSGO(commands.Cog):
             team2_flag_request += SteamID(player).__str__() + ','
         team2_flag_request = team2_flag_request[:-1]
 
+        self.logger.info('Making request to the Steam API to get player flags')
         session = aiohttp.ClientSession()
         async with session.get(f'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/'
                                f'?key={self.bot.steam_web_api_key}'
@@ -354,27 +384,33 @@ class CSGO(commands.Cog):
             }
         }
 
+        self.logger.debug(f'Match Config =\n {pprint.pformat(match_config)}')
+
         with open('./match_config.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         await ctx.send('If you are coaching, once you join the server, type .coach')
         loading_map_message = await ctx.send('Server is being configured')
         await asyncio.sleep(0.3)
-        valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
-                           'exec triggers/get5')
+        get5_trigger = valve.rcon.execute((csgo_server.server_address, csgo_server.server_port),
+                                          csgo_server.RCON_password,
+                                          'exec triggers/get5')
+        self.logger.debug(f'Executing get5_trigger (something for Yannicks Server) \n {get5_trigger}')
         await asyncio.sleep(10)
         await loading_map_message.delete()
-        valve.rcon.execute((csgo_server.server_address, csgo_server.server_port), csgo_server.RCON_password,
-                           f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
-
+        load_match = valve.rcon.execute((csgo_server.server_address, csgo_server.server_port),
+                                        csgo_server.RCON_password,
+                                        f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
+        self.logger.debug(f'Load Match via URL\n {load_match}')
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
         if self.bot.connect_dm:
             for player in team1 + team2 + self.bot.spectators:
                 try:
                     await player.send(embed=connect_embed)
-                except discord.HTTPException or discord.Forbidden:
+                except (discord.HTTPException, discord.Forbidden):
                     await ctx.send(f'Unable to PM <@{player.id}> the server details.')
+                    self.logger.warning(f'{player} was not sent the IP via DM')
         else:
             await ctx.send(embed=connect_embed)
         score_embed = discord.Embed()
@@ -389,12 +425,14 @@ class CSGO(commands.Cog):
 
         if not self.pug.enabled:
             self.queue_check.start()
+            self.logger.info('Queue Starting Back')
 
     @pug.error
     async def pug_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
-        traceback.print_exc()
+            self.logger.warning(str(error))
+        self.logger.exception(f'{ctx.command} caused an exception')
 
     def player_veto_embed(self, message_text, players_text, team1, team1_captain, team2, team2_captain):
         team1_text = ''
@@ -520,6 +558,7 @@ class CSGO(commands.Cog):
             except asyncio.TimeoutError:
                 validIndexes = [i for i in range(len(is_vetoed)) if not is_vetoed[i]]
                 index = choice(validIndexes)
+                self.logger.debug('Force selected Map')
             else:
                 index = emoji_bank.index(reaction.emoji) - 1
 
@@ -541,6 +580,7 @@ class CSGO(commands.Cog):
             message = await ctx.fetch_message(message.id)
 
             map_vetoed = await get_next_map_veto(message, current_team_captain, is_vetoed)
+            self.logger.debug(f'{current_team_captain} vetoed {map_vetoed}')
             vetoed_map_index = map_list.index(map_vetoed)
             is_vetoed[vetoed_map_index] = True
 
@@ -560,6 +600,7 @@ class CSGO(commands.Cog):
         map_list = list(filter(lambda map_name: not is_vetoed[map_list.index(map_name)], map_list))
 
         chosen_map = map_list[0]
+        self.logger.debug(f'Chosen map {chosen_map}')
         chosen_map_embed = await self.get_chosen_map_embed(chosen_map, session)
         await asyncio.gather(message.clear_reactions(),
                              message.edit(embed=chosen_map_embed))
@@ -580,8 +621,10 @@ class CSGO(commands.Cog):
             error_message = ''
             for member in not_connected_members:
                 error_message += f'<@{member.id}> '
-            error_message += f'must connect their steam account with the command ```{self.bot.command_prefix}link <Steam Profile URL>```'
+            error_message += f'must connect their steam account with the command `{self.bot.command_prefix}link <Steam Profile URL>`'
             await self.bot.queue_ctx.send(error_message)
+            self.logger.debug('Members in the queue did not connect their account')
+            self.logger.info(error_message)
 
         await db.disconnect()
         available: bool = False
@@ -598,6 +641,7 @@ class CSGO(commands.Cog):
             self.ready_up.start(message=ready_up_message, members=self.bot.queue_voice_channel.members)
             self.bot.users_not_ready = self.bot.queue_voice_channel.members
             self.queue_check.stop()
+            self.logger.debug(f'Unready users {self.bot.users_not_ready}')
 
     @tasks.loop(seconds=1.0, count=60)
     async def ready_up(self, message: discord.Message, members: List[discord.Member]):
@@ -627,6 +671,8 @@ class CSGO(commands.Cog):
     async def ready_up_cancel(self):
         if self.readied_up:
             self.readied_up = False
+            self.logger.debug(f'Queue users {self.bot.queue_voice_channel.members}')
+            self.logger.info('Starting Pug Command')
             await self.pug(self.bot.queue_ctx)
         else:
             not_ready_text: List[str] = []
@@ -634,18 +680,21 @@ class CSGO(commands.Cog):
                 not_ready_text.append(f'<@{member.id}>')
                 await member.move_to(None, reason='You did not ready up')
             await self.bot.queue_ctx.send(f'{", ".join(map(str, not_ready_text))} did not ready up')
+            self.logger.debug('Users did not ready up')
             self.bot.users_not_ready = []
             self.queue_check.start()
 
     @commands.command(help='This command creates a URL that people can click to connect to the server.',
                       brief='Creates a URL people can connect to', usage='<ServerID>', hidden=True)
     async def connect(self, ctx: commands.Context, server_id: int = 0):
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
         embed = await self.connect_embed(self.bot.servers[server_id])
         if self.bot.connect_dm:
             try:
                 await ctx.author.send(embed=embed)
-            except discord.HTTPException or discord.Forbidden:
+            except (discord.HTTPException, discord.Forbidden):
                 await ctx.send(f'Unable to PM <@{ctx.author.id}> the server details.')
+                self.logger.warning(f'{ctx.author} was not sent the IP via DM')
         else:
             await ctx.send(embed=embed)
 
@@ -655,11 +704,13 @@ class CSGO(commands.Cog):
             embed = discord.Embed(color=0xff0000)
             embed.add_field(name="Cannot Connect to Server", value="No Response from Server", inline=False)
             await ctx.send(embed=embed)
+            self.logger.error('Cannot Connect to Server, No Response from Server')
         elif isinstance(error.__cause__, IndexError):
             embed = discord.Embed(color=0xff0000)
             embed.add_field(name="Cannot Connect to Server", value="Not valid Server ID", inline=False)
             await ctx.send(embed=embed)
-        traceback.print_exc()
+            self.logger.warning('Not valid Server ID')
+        self.logger.exception(f'{ctx.command} caused an exception')
 
     async def connect_embed(self, csgo_server: CSGOServer) -> discord.Embed:
         with valve.source.a2s.ServerQuerier((csgo_server.server_address, csgo_server.server_port),
@@ -689,6 +740,7 @@ class CSGO(commands.Cog):
                       brief='Changes map pool', usage='<lists of maps> or "active" or "reserve"')
     @commands.has_permissions(administrator=True)
     async def map_pool(self, ctx: commands.Context, *args):
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
         global current_map_pool
         current_map_pool = []
         for arg in args:
@@ -706,17 +758,20 @@ class CSGO(commands.Cog):
                     raise commands.CommandError(message=f'`{arg}` does not have an image in `/images/map_images/'
                                                         'and thus cannot be added to the map pool.\n'
                                                         'Please put an image in that folder to continue.')
+        logging.info(f'Current map pool: {current_map_pool}')
 
     @map_pool.error
     async def map_pool_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
-        traceback.print_exc()
+            self.logger.warning(str(error))
+        self.logger.exception(f'{ctx.command} caused an exception')
 
     @commands.command(aliases=['live', 'live_matches'], help='This command shows the current live matches.',
                       brief='Shows the current live matches')
     @commands.check(checks.active_game)
     async def matches(self, ctx: commands.Context):
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
         for server in self.bot.servers:
             if not server.available:
                 score_embed = discord.Embed(color=0x00ff00)
@@ -740,7 +795,8 @@ class CSGO(commands.Cog):
     async def matches_error(self, ctx: commands.Context, error: Exception):
         if isinstance(error, commands.CommandError):
             await ctx.send(str(error))
-        traceback.print_exc()
+            self.logger.warning(str(error))
+        self.logger.exception(f'{ctx.command} caused an exception')
 
 
 def setup(client):

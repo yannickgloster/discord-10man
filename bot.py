@@ -1,15 +1,17 @@
 import discord
 import logging
+import pprint
 
 from databases import Database
 from discord.ext import commands
+from logging.config import fileConfig
 from typing import List
 from utils.server import WebServer
 from utils.csgo_server import CSGOServer
 
-
-__version__ = '1.6.3'
+__version__ = '1.7.0'
 __dev__ = 745000319942918303
+
 
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
@@ -22,6 +24,11 @@ class Discord_10man(commands.Bot):
                              reactions=True, guild_reactions=True, dm_reactions=True, typing=True, guild_typing=True,
                              dm_typing=True
                          ))
+        fileConfig('logging.conf')
+        self.logger = logging.getLogger(f'10man.{__name__}')
+        self.logger.debug(f'Version = {__version__}')
+        self.logger.debug(f'config.json = \n {pprint.pformat(config)}')
+
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
         if 'bot_port' in config:
@@ -46,12 +53,6 @@ class Discord_10man(commands.Bot):
         self.connect_dm = False
         self.queue_captains: List[discord.Member] = []
 
-        logger = logging.getLogger('discord')
-        logger.setLevel(logging.DEBUG)
-        handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-        logger.addHandler(handler)
-
         for extension in startup_extensions:
             self.load_extension(f'cogs.{extension}')
 
@@ -71,9 +72,10 @@ class Discord_10man(commands.Bot):
                                                              name='CSGO Pug'))
 
         self.dev = self.user.id == __dev__
+        self.logger.debug(f'Dev = {self.dev}')
 
         await self.web_server.http_start()
-        print(f'{self.user} connected.')
+        self.logger.info(f'{self.user} connected.')
 
     async def load(self, extension: str):
         self.load_extension(f'cogs.{extension}')
@@ -82,6 +84,7 @@ class Discord_10man(commands.Bot):
         self.unload_extension(f'cogs.{extension}')
 
     async def close(self):
+        self.logger.warning('Stopping Bot')
         await self.web_server.http_stop()
         await super().close()
 
