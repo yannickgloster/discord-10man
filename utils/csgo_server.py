@@ -61,7 +61,7 @@ class CSGOServer:
             tv_port: str = valve.rcon.execute((self.server_address, self.server_port), self.RCON_password, 'tv_port')
             self.logger.debug(tv_port)
             try:
-                self.gotv = tv_port[self.findNthOccur(tv_port, '"', 3) + 1:self.findNthOccur(tv_port, '"', 4)]
+                self.gotv = tv_port[CSGOServer.findNthOccur(tv_port, '"', 3) + 1:CSGOServer.findNthOccur(tv_port, '"', 4)]
             except ValueError or valve.rcon.RCONMessageError:
                 self.gotv = None
 
