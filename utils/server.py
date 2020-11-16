@@ -9,7 +9,7 @@ import valve.rcon
 from aiohttp import web
 from json import JSONDecodeError
 from logging.config import fileConfig
-from typing import List
+from typing import List, Union
 from utils.csgo_server import CSGOServer
 
 
