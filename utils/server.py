@@ -139,7 +139,7 @@ class WebServer:
             self.logger.warning(f'{request.remote} sent an invalid request.')
             return self._http_error_handler("request-type")
 
-        return self._http_error_handler()
+        return WebServer._http_error_handler()
 
     async def http_start(self) -> None:
         """
