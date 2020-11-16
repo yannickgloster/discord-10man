@@ -31,7 +31,7 @@ class WebServer:
         path = f'/map-veto/{str(uuid.uuid1())}'
         return path
 
-    async def _handler(self, request: web.Request) -> web.Response or web.FileResponse:
+    async def _handler(self, request: web.Request) -> Union[web.Response, web.FileResponse]:
         """
         Super simple HTTP handler.
         Parameters
