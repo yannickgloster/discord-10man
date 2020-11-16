@@ -1,6 +1,8 @@
 from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 import pathlib
 import os
+import logging
+from logging.config import fileConfig
 
 
 class VetoImage:
@@ -24,6 +26,8 @@ class VetoImage:
         The file path of a folder where the assets created will be stored
     font_fp: :class:`str`
         The file path of the font used when labeling the map icons
+    logger: :object:`logger`
+        The logger for the file
     '''
 
     def __init__(self, map_images_fp, x_image_fp, image_extension, assets_fp='veto_image_assets', font_fp='fonts/Arialbd.TTF'):
@@ -33,6 +37,9 @@ class VetoImage:
         self.assets_fp = assets_fp
         self.font_fp = font_fp
         self.__initialise_assets()
+
+        fileConfig('logging.conf')
+        self.logger = logging.getLogger(f'10man.{__name__}')
 
     @property
     def x_image_fp(self):
@@ -209,3 +216,4 @@ class VetoImage:
                 index += 1
 
         canvas.save(output_fp)
+        self.logger.info('Generated Updated Veto Image')
