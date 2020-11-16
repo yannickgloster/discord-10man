@@ -7,6 +7,10 @@ result.png
 # Config Files
 config.json
 
+# Logs
+bot.log
+everything.log
+
 # Database
 main.sqlite
 
