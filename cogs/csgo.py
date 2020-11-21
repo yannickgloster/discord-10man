@@ -297,7 +297,7 @@ class CSGO(commands.Cog):
             for spec in self.bot.spectators:
                 data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
                                           {"spectator": str(spec.id)})
-                spectator_steamIDs.[data[0]] = unidecode(spec.display_name)
+                spectator_steamIDs[data[0]] = unidecode(spec.display_name)
             self.logger.info('Added Spectators')
 
         if map_arg is None:
