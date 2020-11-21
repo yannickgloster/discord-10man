@@ -365,7 +365,9 @@ class CSGO(commands.Cog):
             'side_type': 'always_knife',
             'players_per_team': int(self.bot.match_size / 2),
             'min_players_to_ready': 1,
-            'spectators': spectator_steamIDs,
+            'spectators': {
+                'players': spectator_steamIDs,
+            },
             'team1': {
                 'name': team1_name,
                 'tag': 'team1',
