@@ -266,7 +266,7 @@ class CSGO(commands.Cog):
 
         team1_steamIDs = {}
         team2_steamIDs = {}
-        spectator_steamIDs = []
+        spectator_steamIDs = {}
 
         if ctx.author.voice.channel.category is None:
             team1_channel = await ctx.guild.create_voice_channel(name=f'team_{team1_captain.display_name}',
@@ -297,7 +297,7 @@ class CSGO(commands.Cog):
             for spec in self.bot.spectators:
                 data = await db.fetch_one('SELECT steam_id FROM users WHERE discord_id = :spectator',
                                           {"spectator": str(spec.id)})
-                spectator_steamIDs.append(data[0])
+                spectator_steamIDs.[data[0]] = unidecode(spec.display_name)
             self.logger.info('Added Spectators')
 
         if map_arg is None:
