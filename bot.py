@@ -68,7 +68,7 @@ class Discord_10man(commands.Bot):
         # TODO: Custom state for waiting for pug or if a pug is already playing
         await self.change_presence(status=discord.Status.online,
                                    activity=discord.Activity(type=discord.ActivityType.competing,
-                                                             name='CSGO Pug'))
+                                                             name='CSGO Pugs'))
 
         self.dev = self.user.id == __dev__
         self.logger.debug(f'Dev = {self.dev}')
