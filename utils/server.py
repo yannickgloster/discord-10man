@@ -1,5 +1,6 @@
 import discord
 import logging
+import os
 import pprint
 import socket
 import traceback
@@ -52,6 +53,15 @@ class WebServer:
             elif request.path == self.map_veto_image_path:
                 self.logger.debug(f'{request.remote} accessed {self.IP}:{self.port}/{self.map_veto_image_path}')
                 return web.FileResponse('./result.png')
+            else:
+                self.logger.debug(f'{request.remote} accessed {self.IP}:{self.port}{request.path}')
+                if os.path.isfile(f'./{request.path}.json'):
+                    self.logger.info('File Found')
+                    return web.FileResponse(f'./{request.path}.json')
+                else:
+                    self.logger.error('Invalid Request, File not Found')
+                    return WebServer._http_error_handler('file not found')
+
         # or "Authorization"
         elif request.method == 'POST':
             try:
@@ -121,6 +131,12 @@ class WebServer:
                     score_embed: discord.Embed = server.score_message.embeds[0]
                     score_embed.set_footer(text='🟥 Ended')
                     await server.score_message.edit(embed=score_embed)
+
+                    if os.path.exists(f'./{get5_event["matchid"]}.json'):
+                        os.remove(f'./{get5_event["matchid"]}.json')
+                        self.logger.debug(f'Deleted {get5_event["matchid"]}.json')
+                    else:
+                        self.logger.error(f'Could not delete {get5_event["matchid"]}.json, file does not exist')
 
                     if self.bot.cogs['CSGO'].pug.enabled:
                         for player in server.players:

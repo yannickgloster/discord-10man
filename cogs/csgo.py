@@ -356,8 +356,10 @@ class CSGO(commands.Cog):
         team1_name = f'team_{unidecode(team1_captain.display_name)}'
         team2_name = f'team_{unidecode(team2_captain.display_name)}'
 
+        match_id = f'PUG_{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}'
+
         match_config = {
-            'matchid': f'PUG_{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}',
+            'matchid': match_id,
             'num_maps': 1,
             'maplist': map_list,
             'skip_veto': True,
@@ -388,7 +390,7 @@ class CSGO(commands.Cog):
 
         self.logger.debug(f'Match Config =\n {pprint.pformat(match_config)}')
 
-        with open('./match_config.json', 'w') as outfile:
+        with open(f'./{match_id}.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         await ctx.send('If you are coaching, once you join the server, type .coach')
@@ -402,7 +404,7 @@ class CSGO(commands.Cog):
         await loading_map_message.delete()
         load_match = valve.rcon.execute((csgo_server.server_address, csgo_server.server_port),
                                         csgo_server.RCON_password,
-                                        f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/match"')
+                                        f'get5_loadmatch_url "{bot_ip}:{self.bot.web_server.port}/{match_id}"')
         self.logger.debug(f'Load Match via URL\n {load_match}')
         await asyncio.sleep(5)
         connect_embed = await self.connect_embed(csgo_server)
