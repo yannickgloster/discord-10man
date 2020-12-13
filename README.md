@@ -23,7 +23,7 @@ Do you have a csgo server and want to organize PUGs with your friends in discord
 - Auto Server Configuration
 - [Get5 Features](https://github.com/splewis/get5#get5)
 - Match Statistics Collection ***COMING SOON***
-- [Dathost](https://dathost.net/) Support ***COMING SOON***
+- [Dathost API](https://dathost.net/) Support ***COMING SOON***
 
 ### Requirements:
 - A CSGO Server
