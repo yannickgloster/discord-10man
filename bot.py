@@ -15,8 +15,7 @@ __dev__ = 745000319942918303
 
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
-        # commands.when_mentioned_or('e!')
-        super().__init__(command_prefix='.', case_insensitive=True, description='A bot to run CSGO PUGS.',
+        super().__init__(command_prefix=commands.when_mentioned_or('.'), case_insensitive=True, description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False),
                          intents=discord.Intents(
                              guilds=True, members=True, bans=True, emojis=True, integrations=True, invites=True,
