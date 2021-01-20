@@ -36,7 +36,7 @@ class Setup(commands.Cog):
         await db.connect()
 
         q = "SELECT * FROM users WHERE steam_id = :steam_id"
-        result = await db.fetch_one(query=q, values={"steam_id": steamID.as_steam2_zero})
+        result = await db.fetch_all(query=q, values={"steam_id": steamID.as_steam2_zero})
 
         if result != []:
             raise commands.UserInputError(message='This SteamID is already linked to someone.')
