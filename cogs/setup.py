@@ -57,6 +57,34 @@ class Setup(commands.Cog):
         else:
             self.logger.exception(f'{ctx.command} caused an exception')
 
+    @commands.command(help='This command disconnects a user Steam account from the bot.',
+                      brief='Disconnect a user fromt he bot', usage='<@User>')
+    @commands.has_permissions(administrator=True)
+    async def unlink(self, ctx: commands.Context,  user: discord.Member):
+        self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
+        db = Database('sqlite:///main.sqlite')
+        await db.connect()
+
+        q = "SELECT * FROM users WHERE discord_id = :discord_id"
+        result = await db.fetch_all(query=q, values={"discord_id": str(user.id)})
+
+        if result == []:
+            raise commands.UserInputError(message='This user has no linked Steam ID.')
+
+        await db.execute(query="DELETE FROM users WHERE discord_id = :discord_id", values={"discord_id": user.id})
+
+        embed = discord.Embed(description=f'Disconnected {user.mention}', color=0x00FF00)
+        await ctx.send(embed=embed)
+        self.logger.info(f'{user} removed from database')
+
+    @unlink.error
+    async def unlink_error(self, ctx: commands.Context, error: Exception):
+        if isinstance(error, commands.UserInputError) or isinstance(error, commands.CommandError):
+            await ctx.send(str(error))
+            self.logger.warning(str(error))
+        else:
+            self.logger.exception(f'{ctx.command} caused an exception')
+
     @commands.command(aliases=['spectator', 'spec'],
                       help='Adds this user as a spectator in the config for the next map.',
                       brief='Add user as spectator', usage='<@User>')
