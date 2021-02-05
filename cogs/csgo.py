@@ -390,7 +390,7 @@ class CSGO(commands.Cog):
 
         self.logger.debug(f'Match Config =\n {pprint.pformat(match_config)}')
 
-        with open(f'./{match_id}.json', 'w') as outfile:
+        with open(f'./matches/{match_id}.json', 'w') as outfile:
             json.dump(match_config, outfile, ensure_ascii=False, indent=4)
 
         await ctx.send('If you are coaching, once you join the server, type .coach')
@@ -544,7 +544,7 @@ class CSGO(commands.Cog):
             for index in range(1, num_maps + 1):
                 await message.add_reaction(emoji_bank[index])
 
-        async def get_next_map_veto(message, current_team_captain, is_vetoed):
+        async def get_next_map_veto(current_team_captain, is_vetoed):
             ''' Obtains the next map which was vetoed
 
             Parameters
@@ -560,8 +560,8 @@ class CSGO(commands.Cog):
             try:
                 (reaction, _) = await self.bot.wait_for('reaction_add', check=check, timeout=60.0)
             except asyncio.TimeoutError:
-                validIndexes = [i for i in range(len(is_vetoed)) if not is_vetoed[i]]
-                index = choice(validIndexes)
+                valid_indexes = [i for i in range(len(is_vetoed)) if not is_vetoed[i]]
+                index = choice(valid_indexes)
                 self.logger.debug('Force selected Map')
             else:
                 index = emoji_bank.index(reaction.emoji) - 1
@@ -573,8 +573,7 @@ class CSGO(commands.Cog):
         num_maps_left = len(map_list)
         current_team_captain = choice((team1_captain, team2_captain))
 
-        self.veto_image.construct_veto_image(map_list, veto_image_fp,
-                                             is_vetoed=is_vetoed, spacing=25)
+        self.veto_image.construct_veto_image(map_list, veto_image_fp, is_vetoed=is_vetoed, spacing=25)
         embed = await get_embed(current_team_captain)
         message = await ctx.send(embed=embed)
 
@@ -583,7 +582,7 @@ class CSGO(commands.Cog):
         while num_maps_left > 1:
             message = await ctx.fetch_message(message.id)
 
-            map_vetoed = await get_next_map_veto(message, current_team_captain, is_vetoed)
+            map_vetoed = await get_next_map_veto(current_team_captain, is_vetoed)
             self.logger.debug(f'{current_team_captain} vetoed {map_vetoed}')
             vetoed_map_index = map_list.index(map_vetoed)
             is_vetoed[vetoed_map_index] = True

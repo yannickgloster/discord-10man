@@ -7,6 +7,9 @@ result.png
 # Config Files
 config.json
 
+# Matches History
+matches/
+
 # Logs
 bot.log
 everything.log
