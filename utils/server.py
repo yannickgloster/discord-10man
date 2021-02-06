@@ -1,16 +1,17 @@
-import discord
 import logging
 import os
 import pprint
 import socket
 import traceback
 import uuid
-import valve.rcon
-
-from aiohttp import web
 from json import JSONDecodeError
 from logging.config import fileConfig
 from typing import List, Union
+
+import discord
+import valve.rcon
+from aiohttp import web
+
 from utils.csgo_server import CSGOServer
 
 
@@ -29,8 +30,7 @@ class WebServer:
         self.map_veto_image_path = self.create_new_veto_filepath()
 
     def create_new_veto_filepath(self):
-        path = f'/map-veto/{str(uuid.uuid1())}'
-        return path
+        return f'/map-veto/{str(uuid.uuid1())}'
 
     async def _handler(self, request: web.Request) -> Union[web.Response, web.FileResponse]:
         """
@@ -51,8 +51,8 @@ class WebServer:
                 response = {'path': self.map_veto_image_path}
                 return web.json_response(response)
             elif request.path == self.map_veto_image_path:
-                self.logger.debug(f'{request.remote} accessed {self.IP}:{self.port}/{self.map_veto_image_path}')
-                return web.FileResponse('./result.png')
+                self.logger.debug(f'{request.remote} accessed {self.IP}:{self.port}{self.map_veto_image_path}')
+                return web.FileResponse('./veto_image_assets/result.png')
             else:
                 self.logger.debug(f'{request.remote} accessed {self.IP}:{self.port}{request.path}')
                 if os.path.isfile(f'./{request.path}.json'):
@@ -118,7 +118,7 @@ class WebServer:
                     score_embed.set_footer(text="🟢 Live")
                     await server.score_message.edit(embed=score_embed)
 
-                if get5_event['event'] == 'series_end' or get5_event['event'] == 'series_cancel' or get5_event['event'] == 'map_end':
+                if get5_event['event'] in ['series_end', 'series_cancel', 'map_end']:
                     if get5_event['event'] == 'series_end':
                         await server.score_message.edit(content='Game Over')
                     elif get5_event['event'] == 'series_cancel':

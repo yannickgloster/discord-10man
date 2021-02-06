@@ -1,10 +1,10 @@
-import discord
 import logging
-import valve.rcon
-
-from discord.ext.commands import Context
-from typing import List
 from logging.config import fileConfig
+from typing import List
+
+import discord
+import valve.rcon
+from discord.ext.commands import Context
 
 
 class CSGOServer:

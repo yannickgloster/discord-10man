@@ -1,15 +1,14 @@
-import checks
-import discord
 import logging
-import traceback
-import valve.rcon
+from logging.config import fileConfig
 
-from bot import Discord_10man
+import discord
+import valve.rcon
 from databases import Database
 from discord.ext import commands
-from logging.config import fileConfig
 from steam.steamid import SteamID, from_url
-from typing import List
+
+import checks
+from bot import Discord_10man
 
 
 class Setup(commands.Cog):
@@ -81,7 +80,8 @@ class Setup(commands.Cog):
         db = Database('sqlite:///main.sqlite')
         await db.connect()
         for captain in args:
-            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator', {"spectator": str(captain.id)})
+            data = await db.fetch_one('SELECT 1 FROM users WHERE discord_id = :spectator',
+                                      {"spectator": str(captain.id)})
             if data is None:
                 raise commands.UserInputError(message=f'<@{captain.id}> needs to `.link` their account.')
             self.bot.queue_captains.append(captain)

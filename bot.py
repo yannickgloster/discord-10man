@@ -1,21 +1,24 @@
-import discord
 import logging
 import pprint
-
-from databases import Database
-from discord.ext import commands
 from logging.config import fileConfig
 from typing import List
-from utils.server import WebServer
+
+import discord
+from databases import Database
+from discord.ext import commands
+
 from utils.csgo_server import CSGOServer
+from utils.server import WebServer
 
 __version__ = '1.7.1'
 __dev__ = 745000319942918303
+# __dev__ = None
 
 
 class Discord_10man(commands.Bot):
     def __init__(self, config: dict, startup_extensions: List[str]):
-        super().__init__(command_prefix=commands.when_mentioned_or('.'), case_insensitive=True, description='A bot to run CSGO PUGS.',
+        super().__init__(command_prefix=commands.when_mentioned_or('.'), case_insensitive=True,
+                         description='A bot to run CSGO PUGS.',
                          help_command=commands.DefaultHelpCommand(verify_checks=False),
                          intents=discord.Intents(
                              guilds=True, members=True, bans=True, emojis=True, integrations=True, invites=True,
@@ -30,10 +33,7 @@ class Discord_10man(commands.Bot):
 
         self.token: str = config['discord_token']
         self.bot_IP: str = config['bot_IP']
-        if 'bot_port' in config:
-            self.bot_port: int = config['bot_port']
-        else:
-            self.bot_port: int = 3000
+        self.bot_port: int = config['bot_port']
         self.steam_web_api_key = config['steam_web_API_key']
         self.servers: List[CSGOServer] = []
         # Will need to change for when there is multiple server queue

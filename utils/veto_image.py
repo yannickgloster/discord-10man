@@ -1,8 +1,9 @@
-from PIL import Image, ImageDraw, ImageEnhance, ImageFont
-import pathlib
-import os
 import logging
+import os
+import pathlib
 from logging.config import fileConfig
+
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 
 class VetoImage:
@@ -30,7 +31,8 @@ class VetoImage:
         The logger for the file
     '''
 
-    def __init__(self, map_images_fp, x_image_fp, image_extension, assets_fp='veto_image_assets', font_fp='fonts/Arialbd.TTF'):
+    def __init__(self, map_images_fp, x_image_fp, image_extension, assets_fp='veto_image_assets',
+                 font_fp='fonts/Arialbd.TTF'):
         fileConfig('logging.conf')
         self.logger = logging.getLogger(f'10man.{__name__}')
 
@@ -63,7 +65,7 @@ class VetoImage:
             self._image_extension = '.' + value
         else:
             self._image_extension = value
-    
+
     @staticmethod
     def resize(image, percentage, output_fp=None):
         '''Resizes the image based on the percentage provided
@@ -92,7 +94,7 @@ class VetoImage:
 
         if output_fp:
             image.save(output_fp)
-        
+
         return image
 
     def __crop_map_images(self):
@@ -158,7 +160,7 @@ class VetoImage:
         self.__crop_map_images()
         self.__add_map_name()
 
-    def construct_veto_image(self, map_list, output_fp, is_vetoed=list(), spacing=0):
+    def construct_veto_image(self, map_list, output_fp, is_vetoed, spacing=0):
         ''' Outputs an image containing all the maps where all the vetoed
         maps are crossed out
 
@@ -169,7 +171,7 @@ class VetoImage:
         output_fp: :class:`str`
             The filepath of the output veto image
         is_vetoed: :class:`list` of :class:`bool`
-            The list of vetoed maps where the indicies match up with the
+            The list of vetoed maps where the indices match up with the
             map_list parameter that is if is_vetoed[index] is True,
             map_list[index] is vetoed
         spacing: :class:`int`

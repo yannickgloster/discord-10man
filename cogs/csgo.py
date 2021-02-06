@@ -1,36 +1,36 @@
-import aiohttp
 import asyncio
-import checks
 import datetime
-import discord
 import json
+import logging
 import os
+import pprint
 import socket
-import traceback
+from collections import Counter
+from datetime import datetime
+from logging.config import fileConfig
+from random import choice, shuffle, randint
+from typing import List
+
+import aiohttp
+import discord
 import valve.rcon
 import valve.source.a2s
-
-from bot import Discord_10man
-from collections import Counter
 from databases import Database
-from datetime import datetime
 from discord.ext import commands, tasks
-from random import choice, shuffle, randint
 from steam.steamid import SteamID
-from typing import List
-from utils.csgo_server import CSGOServer
-from utils.veto_image import VetoImage
 from unidecode import unidecode
 
-import logging
-from logging.config import fileConfig
-import pprint
+import checks
+from bot import Discord_10man
+from utils.csgo_server import CSGOServer
+from utils.veto_image import VetoImage
 
-# TODO: Allow administrators to update the maplist
+# TODO: Allow administrators to update the map list
 active_map_pool = ['de_inferno', 'de_train', 'de_mirage', 'de_nuke', 'de_overpass', 'de_dust2', 'de_vertigo']
 reserve_map_pool = ['de_cache', 'de_cbble', 'cs_office', 'cs_agency']
 current_map_pool = active_map_pool.copy()
 
+veto_image_fp = './veto_image_assets/result.png'
 emoji_bank = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
 
 # Veto style 1 2 2 2 1 1 1, last two 1s are for if we are playing with coaches
@@ -53,7 +53,7 @@ class CSGO(commands.Cog):
         self.readied_up: bool = False
 
     @commands.command(hidden=True)
-    async def test(self, ctx: commands.Context, *args):
+    async def test(self, ctx: commands.Context):
         self.logger.debug(f'{ctx.author}: {ctx.prefix}{ctx.invoked_with} {ctx.args[2:]}')
         print(f'test')
 
@@ -129,7 +129,7 @@ class CSGO(commands.Cog):
             team2_captain = team2[0]
             message_text = 'Random Teams'
             message = await ctx.send(message_text)
-            embed = self.player_veto_embed(message_text=message_text, players_text='Random Teams', team1=team1,
+            embed = self.player_veto_embed(players_text='Random Teams', team1=team1,
                                            team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
             await message.edit(content=message_text, embed=embed)
             self.logger.debug(f'Random Team1: {team1}')
@@ -196,8 +196,8 @@ class CSGO(commands.Cog):
                 for player in players:
                     players_text += f'{emojis[i]} - <@{player.id}>\n'
                     i += 1
-                embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
-                                               team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
+                embed = self.player_veto_embed(players_text=players_text, team1=team1, team1_captain=team1_captain,
+                                               team2=team2, team2_captain=team2_captain)
                 await message.edit(content=message_text, embed=embed)
                 if len(emoji_remove) > 0:
                     for emoji in emoji_remove:
@@ -255,8 +255,8 @@ class CSGO(commands.Cog):
         else:
             message_text = f'Map is `{map_arg}`'
         players_text = 'None'
-        embed = self.player_veto_embed(message_text=message_text, players_text=players_text, team1=team1,
-                                       team1_captain=team1_captain, team2=team2, team2_captain=team2_captain)
+        embed = self.player_veto_embed(players_text=players_text, team1=team1, team1_captain=team1_captain, team2=team2,
+                                       team2_captain=team2_captain)
         await message.edit(content=message_text, embed=embed)
         await message.clear_reactions()
 
@@ -395,7 +395,7 @@ class CSGO(commands.Cog):
 
         await ctx.send('If you are coaching, once you join the server, type .coach')
         loading_map_message = await ctx.send('Server is being configured')
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(0.5)
         get5_trigger = valve.rcon.execute((csgo_server.server_address, csgo_server.server_port),
                                           csgo_server.RCON_password,
                                           'exec triggers/get5')
@@ -438,7 +438,7 @@ class CSGO(commands.Cog):
             self.logger.warning(str(error))
         self.logger.exception(f'{ctx.command} caused an exception')
 
-    def player_veto_embed(self, message_text, players_text, team1, team1_captain, team2, team2_captain):
+    def player_veto_embed(self, players_text, team1, team1_captain, team2, team2_captain):
         team1_text = ''
         team2_text = ''
         for team1_player in team1:
@@ -456,6 +456,7 @@ class CSGO(commands.Cog):
         embed.add_field(name=f'Team {team1_captain.display_name}', value=team1_text, inline=True)
         embed.add_field(name='Players', value=players_text, inline=True)
         embed.add_field(name=f'Team {team2_captain.display_name}', value=team2_text, inline=True)
+
         return embed
 
     async def get_chosen_map_embed(self, chosen_map, session=aiohttp.ClientSession()):
@@ -471,7 +472,6 @@ class CSGO(commands.Cog):
         '''
         if session.closed:
             session = aiohttp.ClientSession()
-        veto_image_fp = 'result.png'
         base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
 
         chosen_map_file_name = chosen_map + self.veto_image.image_extension
@@ -506,7 +506,6 @@ class CSGO(commands.Cog):
             The other team captain
         '''
 
-        veto_image_fp = 'result.png'
         session = aiohttp.ClientSession()
         base_url = f'http://{self.bot.bot_IP}:{self.bot.web_server.port}'
 
@@ -527,6 +526,7 @@ class CSGO(commands.Cog):
             embed.set_image(url=url)
             embed.set_footer(text=f'It is now {current_team_captain}\'s turn to veto | You have 60 seconds',
                              icon_url=current_team_captain.avatar_url)
+
             return embed
 
         async def add_reactions(message, num_maps):
@@ -549,10 +549,9 @@ class CSGO(commands.Cog):
 
             Parameters
             -----------
-            message: :class:`discord.Message`
-                The veto message which has the number emoji reactions
-            num_maps: :class:`discord.Member`
+            current_team_captain: :class:`discord.Member`
                 The current team captain
+            is_vetoed: :class:`list` of :class:`bool`
             '''
 
             check = lambda reaction, user: reaction.emoji in emoji_bank and user == current_team_captain
@@ -573,7 +572,7 @@ class CSGO(commands.Cog):
         num_maps_left = len(map_list)
         current_team_captain = choice((team1_captain, team2_captain))
 
-        self.veto_image.construct_veto_image(map_list, veto_image_fp, is_vetoed=is_vetoed, spacing=25)
+        self.veto_image.construct_veto_image(map_list, veto_image_fp, is_vetoed, spacing=25)
         embed = await get_embed(current_team_captain)
         message = await ctx.send(embed=embed)
 
@@ -592,8 +591,7 @@ class CSGO(commands.Cog):
             else:
                 current_team_captain = team1_captain
 
-            self.veto_image.construct_veto_image(map_list, veto_image_fp,
-                                                 is_vetoed=is_vetoed, spacing=25)
+            self.veto_image.construct_veto_image(map_list, veto_image_fp, is_vetoed, spacing=25)
             embed = await get_embed(current_team_captain)
             await asyncio.gather(message.edit(embed=embed),
                                  message.clear_reaction(emoji_bank[vetoed_map_index + 1]))
@@ -605,8 +603,8 @@ class CSGO(commands.Cog):
         chosen_map = map_list[0]
         self.logger.debug(f'Chosen map {chosen_map}')
         chosen_map_embed = await self.get_chosen_map_embed(chosen_map, session)
-        await asyncio.gather(message.clear_reactions(),
-                             message.edit(embed=chosen_map_embed))
+        await asyncio.gather(message.clear_reactions(), message.edit(embed=chosen_map_embed))
+
         return map_list
 
     @tasks.loop(seconds=5.0)
@@ -733,9 +731,8 @@ class CSGO(commands.Cog):
         embed.add_field(name='Map', value=info['map'], inline=True)
         gotv = csgo_server.get_gotv()
         if gotv is not None:
-            embed.add_field(name='GOTV',
-                            value=f'connect {csgo_server.server_address}:{gotv}',
-                            inline=False)
+            embed.add_field(name='GOTV', value=f'connect {csgo_server.server_address}:{gotv}', inline=False)
+
         return embed
 
     @commands.command(aliases=['maps'], help='Resets the map pool to be whatever maps are specified'

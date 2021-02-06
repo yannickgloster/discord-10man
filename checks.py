@@ -1,7 +1,6 @@
-import logging
-
 from databases import Database
 from discord.ext import commands
+
 
 async def voice_channel(ctx: commands.Context):
     if ctx.author.voice is None:
