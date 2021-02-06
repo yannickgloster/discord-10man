@@ -1,11 +1,10 @@
 # Map Veto
-veto_image_assets
-/veto_image_assets
-/veto_image_assets/**
+veto_image_assets/
 result.png
 
 # Config Files
 config.json
+match_config.json
 
 # Matches History
 matches/
@@ -20,10 +19,8 @@ main.sqlite
 # Icon
 icon.png
 
-.idea
-.idea/**
-/.idea
-/.idea/**
+# PyCharm
+.idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -145,7 +142,7 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
+site/
 
 # mypy
 .mypy_cache/
@@ -154,5 +151,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-match_config.json
