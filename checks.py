@@ -49,7 +49,7 @@ async def active_game(ctx: commands.Context):
     active: bool = False
     for server in ctx.bot.servers:
         if not server.available:
-            active = False
+            active = True
             break
     if not active:
         raise commands.CommandError(message='There are no live matches')
