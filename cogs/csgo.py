@@ -639,8 +639,11 @@ class CSGO(commands.Cog):
         if (len(self.bot.queue_voice_channel.members) >= self.bot.match_size or (
                 self.bot.dev and len(self.bot.queue_voice_channel.members) >= 1)) and available:
             embed = discord.Embed()
+            players_ready = []
+            for ready_players in self.bot.queue_voice_channel.members:
+                players_ready.append(ready_players.mention)
             embed.add_field(name='You have 60 seconds to ready up!', value='Ready: ✅', inline=False)
-            ready_up_message = await self.bot.queue_ctx.send(embed=embed)
+            ready_up_message = await self.bot.queue_ctx.send(content=", ".join(players_ready), embed=embed)
             await ready_up_message.add_reaction('✅')
             self.ready_up.start(message=ready_up_message, members=self.bot.queue_voice_channel.members)
             self.bot.users_not_ready = self.bot.queue_voice_channel.members
