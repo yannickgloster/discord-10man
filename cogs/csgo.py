@@ -384,7 +384,7 @@ class CSGO(commands.Cog):
             },
             'cvars': {
                 'get5_event_api_url': f'http://{bot_ip}:{self.bot.web_server.port}/',
-                'get5_print_damage': 1,
+                'get5_print_damage': '1',
             }
         }
 
