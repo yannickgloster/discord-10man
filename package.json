@@ -4,13 +4,16 @@
   "description": "Discord Bot for organzing CSGO pugs",
   "main": "bot.js",
   "dependencies": {
+    "@prisma/client": "^2.21.2",
     "discord.js": "^12.5.3",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "steamid-parser": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^7.25.0",
     "eslint-config-prettier": "^8.3.0",
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.7",
+    "prisma": "^2.21.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

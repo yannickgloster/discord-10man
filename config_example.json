@@ -1,8 +1,5 @@
 {
-    "discord_token": "123fkdjsh123alksjfhlaskdjafhlkj1hl3kj4hlkjss",
-    "bot_IP": "",
-    "bot_port": 3000,
-    "steam_web_API_key": "123ABDKLK12938712938SBDDS1723987",
+    "prefix": "!",
     "servers": [
         {
             "server_address": "csgo.yannickgloster.com",

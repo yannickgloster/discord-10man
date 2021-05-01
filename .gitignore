@@ -1,6 +1,7 @@
 config.json
 main.sqlite
 match_config.json
+prisma/dev.db
 
 # Numerous always-ignore extensions
 *.diff
