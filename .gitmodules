@@ -1,6 +1,0 @@
-[submodule "sourcemod_plugins/get5"]
-	path = sourcemod_plugins/get5
-	url = https://github.com/splewis/get5.git
-[submodule "sourcemod_plugins/get5_eventapi"]
-	path = sourcemod_plugins/get5_eventapi
-	url = https://github.com/yannickgloster/get5_eventapi.git
