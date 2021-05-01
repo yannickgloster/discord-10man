@@ -1,7 +1,10 @@
 config.json
-main.sqlite
 match_config.json
+
+# Sqlite
+main.sqlite
 prisma/dev.db
+prisma/dev.db-journal
 
 # Numerous always-ignore extensions
 *.diff
