@@ -1,0 +1,31 @@
+{
+  "name": "discord-10man",
+  "version": "0.0.1",
+  "description": "Discord Bot for organzing CSGO pugs",
+  "main": "bot.js",
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "dotenv": "^8.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.25.0",
+    "eslint-config-prettier": "^8.3.0",
+    "nodemon": "^2.0.7"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon . localhost 8080",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yannickgloster/discord-10man.git"
+  },
+  "keywords": [],
+  "author": "yannickgloster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yannickgloster/discord-10man/issues"
+  },
+  "homepage": "https://github.com/yannickgloster/discord-10man#readme"
+}
