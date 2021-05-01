@@ -18,11 +18,23 @@ const emojis = [
   "👑",
 ];
 
-function createPlayerVetoEmbed(team1, playersLeft, team2) {
+const matchSize = 10;
+
+function createPlayerVetoEmbed(
+  team1,
+  playersLeft,
+  team2,
+  currentCaptain,
+  numToSelect
+) {
   const playerVetoEmbed = new Discord.MessageEmbed()
     .setColor("#0099ff")
     .setTitle("Player Veto")
-    .setDescription("60 Seconds to pick your players")
+    .setDescription(
+      `<@${currentCaptain.id}>, 60 Seconds to pick ${numToSelect} player${
+        numToSelect > 1 ? "s" : ""
+      }`
+    )
     .setTimestamp()
     .setFooter("Built by Yannick & Lexes");
 
@@ -59,8 +71,26 @@ module.exports = {
   description: "CSGO Pug",
   async execute(message) {
     // For testing
-    const players = new Array(10).fill(message.author.id);
-    const pugMessage = await message.channel.send("Loading 10Man");
+    const players = new Array(matchSize).fill(message.author.id);
+
+    const vetoFormat = [];
+    if (matchSize == 2) {
+      vetoFormat.push(1);
+      vetoFormat.push(1);
+    } else {
+      let i;
+      for (i = 0; i < matchSize - 2; i++) {
+        if (i == 0 || i == matchSize - 3) {
+          vetoFormat.push(1);
+        } else if (i % 2 == 0) {
+          vetoFormat.push(2);
+        }
+      }
+    }
+
+    console.log(vetoFormat);
+
+    const pugMessage = await message.channel.send(`Loading ${matchSize}Man`);
     await Promise.all(
       players.map(
         (player, index) =>
@@ -97,11 +127,23 @@ module.exports = {
       emoji: index,
     }));
 
-    await pugMessage.edit(createPlayerVetoEmbed(team1, playersLeft, team2));
-
     // Captains Pick Players
     let currentCaptain = team1[0];
-    // For testing
+
+    let vetoStage = 0;
+    let numSelectedPlayers = 0;
+
+    await pugMessage.edit(
+      createPlayerVetoEmbed(
+        team1,
+        playersLeft,
+        team2,
+        currentCaptain,
+        vetoFormat[vetoStage]
+      )
+    );
+
+    // For Testing
     let captainSwitch = true;
     try {
       while (playersLeft.length > 0) {
@@ -112,36 +154,63 @@ module.exports = {
           );
         };
 
-        const collected = await pugMessage.awaitReactions(filter, {
-          max: 1,
-          time: 60000,
-          errors: ["time"],
-        });
+        let selectedPlayer = [_.sample(playersLeft, 1)];
 
-        const selectedPlayer = playersLeft.filter(
-          (player) =>
-            player.emoji == emojis.indexOf(collected.first().emoji.name)
-        );
+        try {
+          const collected = await pugMessage.awaitReactions(filter, {
+            max: 1,
+            time: 60000,
+            errors: ["time"],
+          });
+
+          selectedPlayer = playersLeft.filter(
+            (player) =>
+              player.emoji == emojis.indexOf(collected.first().emoji.name)
+          );
+        } catch (e) {
+          console.log("Player did not select in time");
+        }
 
         playersLeft.splice(playersLeft.indexOf(selectedPlayer[0]), 1);
 
+        numSelectedPlayers = numSelectedPlayers + 1;
+
         if (captainSwitch && currentCaptain === team1[0]) {
           team1.push(selectedPlayer[0]);
-          currentCaptain = team2[0];
-          // Testing
-          captainSwitch = !captainSwitch;
         } else if (currentCaptain === team2[0]) {
           team2.push(selectedPlayer[0]);
-          currentCaptain = team1[0];
-          // Testing
-          captainSwitch = !captainSwitch;
         }
-        await collected.first().remove();
-        await pugMessage.edit(createPlayerVetoEmbed(team1, playersLeft, team2));
+
+        if (numSelectedPlayers == vetoFormat[vetoStage]) {
+          if (captainSwitch && currentCaptain === team1[0]) {
+            currentCaptain = team2[0];
+            // Testing
+            captainSwitch = !captainSwitch;
+          } else if (currentCaptain === team2[0]) {
+            currentCaptain = team1[0];
+            // Testing
+            captainSwitch = !captainSwitch;
+          }
+
+          numSelectedPlayers = 0;
+          vetoStage = vetoStage + 1;
+        }
+
+        await pugMessage.edit(
+          createPlayerVetoEmbed(
+            team1,
+            playersLeft,
+            team2,
+            currentCaptain,
+            vetoFormat[vetoStage]
+          )
+        );
       }
     } catch (e) {
       console.log(e);
     }
+
+    await pugMessage.reactions.removeAll();
 
     // const rcon = await Rcon.connect({
     //   host: config.servers[0].server_address,
