@@ -1,7 +1,10 @@
 const Discord = require("discord.js");
+const { PrismaClient } = require("@prisma/client");
 const { Rcon } = require("rcon-client");
 const config = require("../../config.json");
 const _ = require("lodash");
+
+const prisma = new PrismaClient();
 
 const emojis = [
   "0️⃣",
@@ -18,7 +21,7 @@ const emojis = [
   "👑",
 ];
 
-const matchSize = 10;
+const matchSize = 4;
 
 function createPlayerVetoEmbed(
   team1,
@@ -87,8 +90,6 @@ module.exports = {
         }
       }
     }
-
-    console.log(vetoFormat);
 
     const pugMessage = await message.channel.send(`Loading ${matchSize}Man`);
     await Promise.all(
@@ -211,6 +212,70 @@ module.exports = {
     }
 
     await pugMessage.reactions.removeAll();
+
+    const team1SteamIds = await Promise.all(
+      team1.map(async (player) => {
+        const user = await prisma.user.findFirst({
+          where: {
+            discordId: Number(player.id),
+          },
+        });
+        return user.steamId;
+      })
+    );
+
+    const team2SteamIds = await Promise.all(
+      team2.map(async (player) => {
+        const user = await prisma.user.findFirst({
+          where: {
+            discordId: Number(player.id),
+          },
+        });
+        return user.steamId;
+      })
+    );
+
+    console.log(team2SteamIds);
+
+    // Find Common Steam Flag
+
+    const match_config = {
+      matchid: `PUG_${new Date().toISOString()}`,
+      num_maps: 1,
+      maplist: [
+        "de_inferno",
+        "de_train",
+        "de_mirage",
+        "de_nuke",
+        "de_overpass",
+        "de_dust2",
+        "de_vertigo",
+      ],
+      skip_veto: true,
+      veto_first: "team1",
+      side_type: "always_knife",
+      players_per_team: Number(matchSize / 2),
+      min_players_to_ready: 1,
+      spectators: {
+        players: [],
+      },
+      team1: {
+        name: escape(`team1`),
+        tag: "team1",
+        flag: "IE",
+        players: team1SteamIds,
+      },
+      team2: {
+        name: escape(`team2`),
+        tag: "team2",
+        flag: "IE",
+        players: team2SteamIds,
+      },
+      cvars: {
+        get5_event_api_url: "http://{bot_ip}:{self.bot.web_server.port}/",
+        get5_print_damage: "1",
+      },
+    };
 
     // const rcon = await Rcon.connect({
     //   host: config.servers[0].server_address,
