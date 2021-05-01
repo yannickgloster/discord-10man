@@ -5,7 +5,7 @@ const { prefix } = require("./config.json");
 
 dotenv.config();
 
-const client = new Discord.Client();
+const client = new Discord.Client({ restTimeOffset: 250 });
 client.commands = new Discord.Collection();
 client.cooldowns = new Discord.Collection();
 
