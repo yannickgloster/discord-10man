@@ -4,7 +4,7 @@ module.exports = {
   args: true,
   /**
    * @param {Discord.Message} message - Discord Message that triggered the command
-   * @param {string[]} args - Arguments passwed with the message
+   * @param {string[]} args - Arguments passed with the message
    */
   async execute(message, args) {},
 };
