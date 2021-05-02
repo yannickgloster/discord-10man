@@ -17,6 +17,15 @@ class MapVetoImageFactory {
     return instance;
   }
 
+  /**
+   * Returns a text overlay SVG.
+   *
+   * @param {string} text Text content.
+   * @param {number} width Width of SVG.
+   * @param {number} height Height of SVG.
+   * @param {number} x X position of text.
+   * @param {number} y Y position of text.
+   */
   static getTextOverlay(text, width, height, x, y) {
     const textOverlay = `
       <svg width="${width}" height="${height}">
@@ -35,10 +44,16 @@ class MapVetoImageFactory {
     return textOverlay;
   }
 
-  static async addImageNumber(image, imageNumber) {
+  /**
+   * Returns a sharp.Sharp image buffer with the map index overlayed on the input image.
+   *
+   * @param {sharp.Sharp} image Image to add index number to
+   * @param {number} index Index number to add
+   */
+  static async addMapIndex(image, index) {
     const metadata = await image.metadata();
     const textOverlay = MapVetoImageFactory.getTextOverlay(
-      imageNumber,
+      index,
       metadata.width,
       metadata.height,
       "5%",
@@ -48,6 +63,13 @@ class MapVetoImageFactory {
     return image.composite([{ input: Buffer.from(textOverlay) }]).toBuffer();
   }
 
+  /**
+   * Returns a sharp.Sharp image buffer with the map name overlayed on the input image.
+   *
+   * @param {sharp.Sharp} image Image to add index number to
+   * @param {string} mapName Map name to add
+   * @returns
+   */
   static async addMapName(image, mapName) {
     const metadata = await image.metadata();
     const textOverlay = MapVetoImageFactory.getTextOverlay(
@@ -61,6 +83,12 @@ class MapVetoImageFactory {
     return image.composite([{ input: Buffer.from(textOverlay) }]).toBuffer();
   }
 
+  /**
+   * Returns a sharp.Sharp image buffer with the cropped image.
+   * The first and the last third of the image is cropped horizontally.
+   *
+   * @param {sharp.Sharp} image Image to crop
+   */
   static async cropImage(image) {
     const metadata = await image.metadata();
     return image
@@ -73,6 +101,13 @@ class MapVetoImageFactory {
       .toBuffer();
   }
 
+  /**
+   * Returns a sharp.Sharp image buffer with the resized image.
+   * The image is * scaled using the input percentage.
+   *
+   * @param {sharp.Sharp} image Image to resize.
+   * @param {number} percentage Percentage to resize image by.
+   */
   static async resizeImage(image, percentage) {
     const metadata = await image.metadata();
     return image
@@ -80,12 +115,22 @@ class MapVetoImageFactory {
       .toBuffer();
   }
 
+  /**
+   * Returns a sharp.Sharp image buffer with the input image crossed out.
+   *
+   * @param {sharp.Sharp} image Image to add the cross mark to.
+   * @param {sharp.Sharp} crossMarkImage Cross mark image used when marking a map vetoed.
+   * @param {number} size Size of the image in pixels.
+   */
   static async addCrossMark(image, crossMarkImage, size) {
     const input = await crossMarkImage.resize(size).toBuffer();
 
     return image.composite([{ input }]).toBuffer();
   }
 
+  /**
+   * Initialises the map veto assets by cropping the images and resizing them.
+   */
   async initialiseAssets() {
     try {
       await fs.promises.mkdir(this.assetsFilePath);
@@ -123,6 +168,13 @@ class MapVetoImageFactory {
     );
   }
 
+  /**
+   * Returns a sharp.Sharp image buffer containing all the maps where all the vetoed maps are crossed out.
+   *
+   * @param {Record<string, boolean>} mapsVetoed Map where the key is the map name and the value indicates whether the map is vetoed.
+   * @param {number} spacing Spacing to put in between the map images.
+   * @returns
+   */
   async createMapVetoImage(mapsVetoed, spacing = 20) {
     const placeholderImageFilePath = path.join(
       this.assetsFilePath,
@@ -190,7 +242,7 @@ class MapVetoImageFactory {
             );
 
             // Add map index
-            const mapImageWithIndexNumberBuffer = await MapVetoImageFactory.addImageNumber(
+            const mapImageWithIndexNumberBuffer = await MapVetoImageFactory.addMapIndex(
               sharp(mapImageWithNameBuffer),
               imageNumber
             );
