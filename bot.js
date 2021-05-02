@@ -108,10 +108,13 @@ app.post("/", function (req, res) {
 });
 
 app.get("/match", function (req, res) {
-  fs.readFile("./matches/" + req.query.id + ".json", "utf8", (err, data) => {
-    res.set("Content-Type", "application/json");
+  res.set("Content-Type", "application/json");
+  try {
+    const data = fs.readFileSync("./matches/" + req.query.id + ".json", "utf8");
     res.send(data);
-  });
+  } catch (e) {
+    res.send({ error: e });
+  }
 });
 
 app.listen(3000, () => {
