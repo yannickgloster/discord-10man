@@ -6,6 +6,10 @@ module.exports = {
   aliases: ["commands"],
   usage: "[command name]",
   cooldown: 5,
+  /**
+   * @param {Discord.Message} message - Discord Message that triggered the command
+   * @param {string[]} args - Arguments passwed with the message
+   */
   execute(message, args) {
     const data = [];
     const { commands } = message.client;

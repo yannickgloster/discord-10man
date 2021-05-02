@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 const { PrismaClient } = require("@prisma/client");
 const Parser = require("steamid-parser");
 const parser = new Parser(process.env.STEAM_API_KEY || "YOUR_API_KEY", {
@@ -12,6 +13,10 @@ module.exports = {
   name: "link",
   description: "Link steam account to bot",
   args: true,
+  /**
+   * @param {Discord.Message} message - Discord Message that triggered the command
+   * @param {string[]} args - Arguments passwed with the message
+   */
   async execute(message, args) {
     try {
       let steamID = await parser.get(args.toString());

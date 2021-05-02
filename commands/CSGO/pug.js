@@ -72,6 +72,9 @@ function createPlayerVetoEmbed(
 module.exports = {
   name: "pug",
   description: "CSGO Pug",
+  /**
+   * @param {Discord.Message} message - Discord Message that triggered the command
+   */
   async execute(message) {
     // For testing
     const players = new Array(matchSize).fill(message.author.id);
