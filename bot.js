@@ -104,6 +104,7 @@ app.get("/", function (req, res) {
 app.post("/", function (req, res) {
   // match updates indiscord
   console.log(req.body);
+  res.end();
 });
 
 app.get("/match", function (req, res) {
