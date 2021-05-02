@@ -22,13 +22,33 @@ module.exports = {
       let steamID = await parser.get(args.toString());
       let steamID64 = steamID.getSteamID64(true);
 
-      await prisma.user.create({
-        data: {
+      await prisma.user.upsert({
+        where: {
+          discordId_steamId: {
+            discordId: Number(message.author.id),
+            steamId: Number(steamID64),
+          },
+        },
+        update: {
+          steamId: Number(steamID64),
+        },
+        create: {
           discordId: Number(message.author.id),
           steamId: Number(steamID64),
         },
       });
-      message.reply(`Connected steam account \`${steamID}\``);
+
+      const linkedEmbed = new Discord.MessageEmbed()
+        .setColor("#0099ff")
+        .setTitle(`${message.author.username} linked`)
+        .setURL(`https://steamcommunity.com/profiles/${steamID64}`)
+        .setTimestamp()
+        .setFooter(
+          `${message.author.username}`,
+          message.author.avatarURL({ format: "jpg" })
+        );
+
+      message.reply(linkedEmbed);
     } catch (e) {
       message.reply("Error in SteamID");
     }
