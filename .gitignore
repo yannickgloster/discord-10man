@@ -6,6 +6,9 @@ main.sqlite
 prisma/dev.db
 prisma/dev.db-journal
 
+# Map veto images
+images/map_veto_assets
+
 # Numerous always-ignore extensions
 *.diff
 *.err

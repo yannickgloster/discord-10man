@@ -1,8 +1,11 @@
 const dotenv = require("dotenv");
 const Discord = require("discord.js");
 const fs = require("fs");
-const { prefix } = require("./config.json");
 const express = require("express");
+const path = require("path");
+
+const { prefix } = require("./config.json");
+const MapVetoImageFactory = require("./util/mapVeto");
 
 dotenv.config();
 
@@ -122,3 +125,9 @@ app.listen(3000, () => {
 });
 
 client.login(process.env.TOKEN);
+
+const mapVetoFactory = new MapVetoImageFactory(
+  path.join(__dirname, "images/map_images"),
+  path.join(__dirname, "images/map_veto_assets")
+);
+mapVetoFactory.initialiseAssets();

@@ -11,6 +11,7 @@
     "express": "^4.17.1",
     "lodash": "^4.17.21",
     "rcon-client": "^4.2.3",
+    "sharp": "^0.28.1",
     "steamid-parser": "^1.0.1"
   },
   "devDependencies": {
