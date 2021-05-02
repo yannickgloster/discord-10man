@@ -8,6 +8,7 @@
     "axios": "^0.21.1",
     "discord.js": "^12.5.3",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "lodash": "^4.17.21",
     "rcon-client": "^4.2.3",
     "steamid-parser": "^1.0.1"

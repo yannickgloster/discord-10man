@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 const Discord = require("discord.js");
 const fs = require("fs");
 const { prefix } = require("./config.json");
+const express = require("express");
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ client.once("ready", () => {
 });
 
 client.on("message", (message) => {
+  test = message.channel;
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
@@ -92,6 +94,28 @@ client.on("message", (message) => {
     console.error(error);
     message.reply("there was an error trying to execute that command!");
   }
+});
+
+const app = express();
+
+app.get("/", function (req, res) {
+  res.send("Hello World");
+});
+
+app.post("/", function (req, res) {
+  // match updates indiscord
+  console.log(req.body);
+});
+
+app.get("/match", function (req, res) {
+  fs.readFile("./matches/" + req.query.id + ".json", "utf8", (err, data) => {
+    res.set("Content-Type", "application/json");
+    res.send(data);
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Webserver ready");
 });
 
 client.login(process.env.TOKEN);
