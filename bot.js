@@ -128,6 +128,7 @@ client.login(process.env.TOKEN);
 
 const mapVetoFactory = new MapVetoImageFactory(
   path.join(__dirname, "images/map_images"),
+  path.join(__dirname, "images/cross_mark.png"),
   path.join(__dirname, "images/map_veto_assets")
 );
 mapVetoFactory.initialiseAssets();

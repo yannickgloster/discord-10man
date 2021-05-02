@@ -5,12 +5,13 @@ const sharp = require("sharp");
 let instance = null;
 
 class MapVetoImageFactory {
-  constructor(mapImagesFilePath, assetsFilePath) {
+  constructor(mapImagesFilePath, crossMarkFilePath, assetsFilePath) {
     if (!instance) {
       instance = this;
     }
 
     this.mapImagesFilePath = mapImagesFilePath;
+    this.crossMarkFilePath = crossMarkFilePath;
     this.assetsFilePath = assetsFilePath;
 
     return instance;
@@ -79,10 +80,15 @@ class MapVetoImageFactory {
       .toBuffer();
   }
 
+  static async addCrossMark(image, crossMarkImage, size) {
+    const input = await crossMarkImage.resize(size).toBuffer();
+
+    return image.composite([{ input }]).toBuffer();
+  }
+
   async initialiseAssets() {
-    const assetsFilePath = this.assetsFilePath;
     try {
-      await fs.promises.mkdir(assetsFilePath);
+      await fs.promises.mkdir(this.assetsFilePath);
     } catch (err) {
       if (err.code !== "EEXIST") {
         throw err;
@@ -92,7 +98,6 @@ class MapVetoImageFactory {
     const mapFileNames = await fs.promises.readdir(this.mapImagesFilePath);
     await Promise.all(
       mapFileNames.map(async (mapFileName) => {
-        const mapName = path.parse(mapFileName).name;
         const mapFilePath = path.join(this.mapImagesFilePath, mapFileName);
         const mapOutputFilePath = path.join(this.assetsFilePath, mapFileName);
 
@@ -109,22 +114,109 @@ class MapVetoImageFactory {
           0.25
         );
 
-        // Add map name
-        const resizedImage = sharp(resizedImageBuffer)
-          .gamma(2.2, 1.5)
-          .blur(1.5);
-        const mapImageWithNameBuffer = await MapVetoImageFactory.addMapName(
-          resizedImage,
-          mapName
-        );
-
         // Save image
-        await sharp(mapImageWithNameBuffer)
+        await sharp(resizedImageBuffer)
           .withMetadata()
           .png()
           .toFile(mapOutputFilePath);
       })
     );
+  }
+
+  async createMapVetoImage(mapsVetoed, spacing = 20) {
+    const placeholderImageFilePath = path.join(
+      this.assetsFilePath,
+      "de_placeholder.png"
+    );
+    const placeholderImage = sharp(placeholderImageFilePath);
+    const placeholderImageMetadata = await placeholderImage.metadata();
+
+    const mapNames = Object.keys(mapsVetoed);
+
+    const numRows = Math.floor((mapNames.length + 1) / 2);
+    const width = placeholderImageMetadata.width * 2 + spacing;
+    const height =
+      placeholderImageMetadata.height * numRows + spacing * (numRows - 1);
+
+    const mapVetoImage = sharp({
+      create: {
+        width,
+        height,
+        channels: 4,
+        //transparent background
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    });
+
+    const assetsFilePaths = (
+      await fs.promises.readdir(this.assetsFilePath)
+    ).map((fileName) => path.join(this.assetsFilePath, fileName));
+    const overlayOptionPromises = [];
+    let mapIndex = 0;
+
+    for (
+      let top = 0;
+      top < height;
+      top += placeholderImageMetadata.height + spacing
+    ) {
+      for (
+        let left = 0;
+        left < width;
+        left += placeholderImageMetadata.width + spacing, mapIndex += 1
+      ) {
+        if (mapIndex == mapNames.length) {
+          break;
+        }
+
+        const currentMapName = mapNames[mapIndex];
+        const [assetFilePath] = assetsFilePaths.filter((filePath) =>
+          filePath.includes(currentMapName)
+        );
+
+        const currentMapImage = sharp(
+          assetFilePath ? assetFilePath : placeholderImageFilePath
+        );
+
+        overlayOptionPromises.push(
+          (async () => {
+            const imageNumber = mapIndex + 1;
+            const currentMapVetoed = mapsVetoed[currentMapName];
+            // Darken image
+            currentMapImage.gamma(2.2, 1.5).blur(1.5);
+            // Add map name
+            const mapImageWithNameBuffer = await MapVetoImageFactory.addMapName(
+              currentMapImage,
+              currentMapName
+            );
+
+            // Add map index
+            const mapImageWithIndexNumberBuffer = await MapVetoImageFactory.addImageNumber(
+              sharp(mapImageWithNameBuffer),
+              imageNumber
+            );
+
+            // Add cross mark if vetoed
+            const input = !currentMapVetoed
+              ? mapImageWithIndexNumberBuffer
+              : await MapVetoImageFactory.addCrossMark(
+                  sharp(mapImageWithIndexNumberBuffer),
+                  sharp(this.crossMarkFilePath),
+                  placeholderImageMetadata.height / 2
+                );
+
+            return { input, top, left };
+          })()
+        );
+      }
+    }
+
+    const overlayOptions = await Promise.all(overlayOptionPromises);
+
+    return mapVetoImage
+      .composite(overlayOptions)
+      .withMetadata()
+      .png()
+      .toBuffer();
   }
 }
 
