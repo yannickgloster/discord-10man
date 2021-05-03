@@ -16,8 +16,8 @@ FROM node:15-alpine
 WORKDIR /usr/src/app
 
 COPY commands ./commands
-COPY fonts ./fonts
 COPY images ./images
+COPY util ./util
 COPY .env .eslintrc.json bot.js config.json package-lock.json package.json ./
 COPY --from=install /usr/src/app/node_modules ./node_modules
 COPY --from=install /usr/src/app/prisma ./prisma
