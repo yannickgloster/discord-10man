@@ -57,7 +57,7 @@ class MapVetoImageFactory {
       metadata.width,
       metadata.height,
       "5%",
-      "55%"
+      "60%"
     );
 
     return image.composite([{ input: Buffer.from(textOverlay) }]).toBuffer();
@@ -77,7 +77,7 @@ class MapVetoImageFactory {
       metadata.width,
       metadata.height,
       "50%",
-      "55%"
+      "60%"
     );
 
     return image.composite([{ input: Buffer.from(textOverlay) }]).toBuffer();
@@ -94,9 +94,9 @@ class MapVetoImageFactory {
     return image
       .extract({
         left: 0,
-        top: metadata.height / 3,
+        top: metadata.height / 4,
         width: metadata.width,
-        height: (metadata.height * 2) / 3,
+        height: metadata.height / 2,
       })
       .toBuffer();
   }
@@ -234,7 +234,7 @@ class MapVetoImageFactory {
             const imageNumber = mapIndex + 1;
             const currentMapVetoed = mapsVetoed[currentMapName];
             // Darken image
-            currentMapImage.gamma(2.2, 1.5).blur(1.5);
+            currentMapImage.modulate({ brightness: 0.55 });
             // Add map name
             const mapImageWithNameBuffer = await MapVetoImageFactory.addMapName(
               currentMapImage,
@@ -253,7 +253,7 @@ class MapVetoImageFactory {
               : await MapVetoImageFactory.addCrossMark(
                   sharp(mapImageWithIndexNumberBuffer),
                   sharp(this.crossMarkFilePath),
-                  placeholderImageMetadata.height / 2
+                  Math.floor(placeholderImageMetadata.height / 2)
                 );
 
             return { input, top, left };
