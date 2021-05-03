@@ -3,6 +3,7 @@ const Discord = require("discord.js");
 const fs = require("fs");
 const express = require("express");
 const path = require("path");
+const sharp = require("sharp");
 
 const { prefix } = require("./config.json");
 const MapVetoImageFactory = require("./util/mapVeto");
@@ -98,6 +99,13 @@ client.on("message", (message) => {
   }
 });
 
+const mapVetoFactory = new MapVetoImageFactory(
+  path.join(__dirname, "images/map_images"),
+  path.join(__dirname, "images/cross_mark.png"),
+  path.join(__dirname, "images/map_veto_assets")
+);
+mapVetoFactory.initialiseAssets();
+
 const app = express();
 
 app.get("/", function (req, res) {
@@ -120,15 +128,23 @@ app.get("/match", function (req, res) {
   }
 });
 
-app.listen(3000, () => {
+app.get("/map-veto-images", async (req, res) => {
+  try {
+    const mapsVeteod = JSON.parse(req.query.maps_vetoed);
+    const vetoImageBuffer = await mapVetoFactory.createMapVetoImage(mapsVeteod);
+    res.status(200);
+    res.type("image/png");
+    sharp(vetoImageBuffer).pipe(res);
+  } catch (err) {
+    res.status(500);
+    res.json({
+      error: err.message,
+    });
+  }
+});
+
+app.listen(process.env.PORT || 3000, () => {
   console.log("Webserver ready");
 });
 
 client.login(process.env.TOKEN);
-
-const mapVetoFactory = new MapVetoImageFactory(
-  path.join(__dirname, "images/map_images"),
-  path.join(__dirname, "images/cross_mark.png"),
-  path.join(__dirname, "images/map_veto_assets")
-);
-mapVetoFactory.initialiseAssets();
