@@ -1,0 +1,31 @@
+{
+  "name": "discord-10man",
+  "version": "0.0.1",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bot": "node bot.js",
+    "deploy-commands": "node deploy-commands.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yannickgloster/discord-10man.git"
+  },
+  "author": "Yannick Gloster",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yannickgloster/discord-10man/issues"
+  },
+  "homepage": "https://github.com/yannickgloster/discord-10man#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.12.0",
+    "@discordjs/rest": "^0.3.0",
+    "discord-api-types": "^0.26.1",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "prettier": "2.5.1"
+  }
+}
